@@ -1,0 +1,17 @@
+
+extend type Query {
+    "「今日こと」を取得"
+    findWht: [Wht!]!
+}
+
+"「今日こと」"
+type Wht implements Node{
+    "ID"
+    id: ID!
+    "記録日"
+    recordDate: String!
+    "タイトル"
+    title: String
+    "テキスト"
+    text: String!
+}

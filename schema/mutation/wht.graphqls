@@ -1,0 +1,14 @@
+
+extend type Mutation {
+    "「今日こと」を登録"
+    createWht(wht: WhtInput!): ID!
+}
+
+input WhtInput {
+    "記録日"
+    recordDate: String!
+    "タイトル"
+    title: String
+    "テキスト"
+    text: String!
+}
