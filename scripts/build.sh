@@ -2,7 +2,6 @@
 set -euox pipefail
 SCRIPT_DIR=$(dirname $0)
 echo ${SCRIPT_DIR}
-
 cd ${SCRIPT_DIR} && cd ../
 
 project=${1:-}

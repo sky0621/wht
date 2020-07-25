@@ -18,7 +18,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 // see https://cloud.google.com/run/docs/quickstarts/build-and-deploy?hl=ja
 func main() {
-	log.Print("helloworld: starting server...")
+	log.Print("helloworld2: starting server...")
 
 	http.HandleFunc("/", handler)
 
