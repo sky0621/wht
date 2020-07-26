@@ -1,4 +1,4 @@
-package main
+package app
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -16,7 +16,7 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht model.WhtInput) (s
 
 func (r *queryResolver) FindWht(ctx context.Context) ([]*model.Wht, error) {
 	// FIXME:
-	t := "いい一日2"
+	t := "いい一日3"
 	return []*model.Wht{
 		{ID: "001", RecordDate: "2020-07-26", Title: &t, Text: "今日は、いい一日だった。"},
 	}, nil

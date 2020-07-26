@@ -1,4 +1,4 @@
-package main
+package app
 
 // This file will not be regenerated automatically.
 //
