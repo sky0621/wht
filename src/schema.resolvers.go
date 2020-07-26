@@ -6,13 +6,15 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/sky0621/wht/model"
 )
 
-func (r *mutationResolver) Noop(ctx context.Context, input *NoopInput) (*NoopPayload, error) {
+func (r *mutationResolver) Noop(ctx context.Context, input *model.NoopInput) (*model.NoopPayload, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id string) (model.Node, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

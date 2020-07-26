@@ -11,6 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/sky0621/wht/model"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -44,8 +46,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreateWht func(childComplexity int, wht WhtInput) int
-		Noop      func(childComplexity int, input *NoopInput) int
+		CreateWht func(childComplexity int, wht model.WhtInput) int
+		Noop      func(childComplexity int, input *model.NoopInput) int
 	}
 
 	NoopPayload struct {
@@ -66,12 +68,12 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	Noop(ctx context.Context, input *NoopInput) (*NoopPayload, error)
-	CreateWht(ctx context.Context, wht WhtInput) (string, error)
+	Noop(ctx context.Context, input *model.NoopInput) (*model.NoopPayload, error)
+	CreateWht(ctx context.Context, wht model.WhtInput) (string, error)
 }
 type QueryResolver interface {
-	Node(ctx context.Context, id string) (Node, error)
-	FindWht(ctx context.Context) ([]*Wht, error)
+	Node(ctx context.Context, id string) (model.Node, error)
+	FindWht(ctx context.Context) ([]*model.Wht, error)
 }
 
 type executableSchema struct {
@@ -99,7 +101,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWht(childComplexity, args["wht"].(WhtInput)), true
+		return e.complexity.Mutation.CreateWht(childComplexity, args["wht"].(model.WhtInput)), true
 
 	case "Mutation.noop":
 		if e.complexity.Mutation.Noop == nil {
@@ -111,7 +113,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Noop(childComplexity, args["input"].(*NoopInput)), true
+		return e.complexity.Mutation.Noop(childComplexity, args["input"].(*model.NoopInput)), true
 
 	case "NoopPayload.clientMutationId":
 		if e.complexity.NoopPayload.ClientMutationID == nil {
@@ -299,7 +301,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createWht_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 WhtInput
+	var arg0 model.WhtInput
 	if tmp, ok := rawArgs["wht"]; ok {
 		arg0, err = ec.unmarshalNWhtInput2githubᚗcomᚋsky0621ᚋwhtᚐWhtInput(ctx, tmp)
 		if err != nil {
@@ -313,7 +315,7 @@ func (ec *executionContext) field_Mutation_createWht_args(ctx context.Context, r
 func (ec *executionContext) field_Mutation_noop_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *NoopInput
+	var arg0 *model.NoopInput
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalONoopInput2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopInput(ctx, tmp)
 		if err != nil {
@@ -412,7 +414,7 @@ func (ec *executionContext) _Mutation_noop(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Noop(rctx, args["input"].(*NoopInput))
+		return ec.resolvers.Mutation().Noop(rctx, args["input"].(*model.NoopInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -421,7 +423,7 @@ func (ec *executionContext) _Mutation_noop(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*NoopPayload)
+	res := resTmp.(*model.NoopPayload)
 	fc.Result = res
 	return ec.marshalONoopPayload2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopPayload(ctx, field.Selections, res)
 }
@@ -450,7 +452,7 @@ func (ec *executionContext) _Mutation_createWht(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWht(rctx, args["wht"].(WhtInput))
+		return ec.resolvers.Mutation().CreateWht(rctx, args["wht"].(model.WhtInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -467,7 +469,7 @@ func (ec *executionContext) _Mutation_createWht(ctx context.Context, field graph
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _NoopPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *NoopPayload) (ret graphql.Marshaler) {
+func (ec *executionContext) _NoopPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.NoopPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -531,7 +533,7 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(Node)
+	res := resTmp.(model.Node)
 	fc.Result = res
 	return ec.marshalONode2githubᚗcomᚋsky0621ᚋwhtᚐNode(ctx, field.Selections, res)
 }
@@ -565,7 +567,7 @@ func (ec *executionContext) _Query_findWht(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Wht)
+	res := resTmp.([]*model.Wht)
 	fc.Result = res
 	return ec.marshalNWht2ᚕᚖgithubᚗcomᚋsky0621ᚋwhtᚐWhtᚄ(ctx, field.Selections, res)
 }
@@ -639,7 +641,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.CollectedField, obj *Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -673,7 +675,7 @@ func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.CollectedField, obj *Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -707,7 +709,7 @@ func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.CollectedField, obj *Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -738,7 +740,7 @@ func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.Collec
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_text(ctx context.Context, field graphql.CollectedField, obj *Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_text(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1827,8 +1829,8 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNoopInput(ctx context.Context, obj interface{}) (NoopInput, error) {
-	var it NoopInput
+func (ec *executionContext) unmarshalInputNoopInput(ctx context.Context, obj interface{}) (model.NoopInput, error) {
+	var it model.NoopInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -1845,8 +1847,8 @@ func (ec *executionContext) unmarshalInputNoopInput(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj interface{}) (WhtInput, error) {
-	var it WhtInput
+func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj interface{}) (model.WhtInput, error) {
+	var it model.WhtInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -1879,13 +1881,13 @@ func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj inte
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj Node) graphql.Marshaler {
+func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case Wht:
+	case model.Wht:
 		return ec._Wht(ctx, sel, &obj)
-	case *Wht:
+	case *model.Wht:
 		if obj == nil {
 			return graphql.Null
 		}
@@ -1934,7 +1936,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var noopPayloadImplementors = []string{"NoopPayload"}
 
-func (ec *executionContext) _NoopPayload(ctx context.Context, sel ast.SelectionSet, obj *NoopPayload) graphql.Marshaler {
+func (ec *executionContext) _NoopPayload(ctx context.Context, sel ast.SelectionSet, obj *model.NoopPayload) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, noopPayloadImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2013,7 +2015,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var whtImplementors = []string{"Wht", "Node"}
 
-func (ec *executionContext) _Wht(ctx context.Context, sel ast.SelectionSet, obj *Wht) graphql.Marshaler {
+func (ec *executionContext) _Wht(ctx context.Context, sel ast.SelectionSet, obj *model.Wht) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, whtImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2337,11 +2339,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNWht2githubᚗcomᚋsky0621ᚋwhtᚐWht(ctx context.Context, sel ast.SelectionSet, v Wht) graphql.Marshaler {
+func (ec *executionContext) marshalNWht2githubᚗcomᚋsky0621ᚋwhtᚐWht(ctx context.Context, sel ast.SelectionSet, v model.Wht) graphql.Marshaler {
 	return ec._Wht(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWht2ᚕᚖgithubᚗcomᚋsky0621ᚋwhtᚐWhtᚄ(ctx context.Context, sel ast.SelectionSet, v []*Wht) graphql.Marshaler {
+func (ec *executionContext) marshalNWht2ᚕᚖgithubᚗcomᚋsky0621ᚋwhtᚐWhtᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Wht) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2378,7 +2380,7 @@ func (ec *executionContext) marshalNWht2ᚕᚖgithubᚗcomᚋsky0621ᚋwhtᚐWht
 	return ret
 }
 
-func (ec *executionContext) marshalNWht2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐWht(ctx context.Context, sel ast.SelectionSet, v *Wht) graphql.Marshaler {
+func (ec *executionContext) marshalNWht2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐWht(ctx context.Context, sel ast.SelectionSet, v *model.Wht) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2388,7 +2390,7 @@ func (ec *executionContext) marshalNWht2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐWht(ct
 	return ec._Wht(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNWhtInput2githubᚗcomᚋsky0621ᚋwhtᚐWhtInput(ctx context.Context, v interface{}) (WhtInput, error) {
+func (ec *executionContext) unmarshalNWhtInput2githubᚗcomᚋsky0621ᚋwhtᚐWhtInput(ctx context.Context, v interface{}) (model.WhtInput, error) {
 	return ec.unmarshalInputWhtInput(ctx, v)
 }
 
@@ -2641,18 +2643,18 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalONode2githubᚗcomᚋsky0621ᚋwhtᚐNode(ctx context.Context, sel ast.SelectionSet, v Node) graphql.Marshaler {
+func (ec *executionContext) marshalONode2githubᚗcomᚋsky0621ᚋwhtᚐNode(ctx context.Context, sel ast.SelectionSet, v model.Node) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Node(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalONoopInput2githubᚗcomᚋsky0621ᚋwhtᚐNoopInput(ctx context.Context, v interface{}) (NoopInput, error) {
+func (ec *executionContext) unmarshalONoopInput2githubᚗcomᚋsky0621ᚋwhtᚐNoopInput(ctx context.Context, v interface{}) (model.NoopInput, error) {
 	return ec.unmarshalInputNoopInput(ctx, v)
 }
 
-func (ec *executionContext) unmarshalONoopInput2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopInput(ctx context.Context, v interface{}) (*NoopInput, error) {
+func (ec *executionContext) unmarshalONoopInput2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopInput(ctx context.Context, v interface{}) (*model.NoopInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -2660,11 +2662,11 @@ func (ec *executionContext) unmarshalONoopInput2ᚖgithubᚗcomᚋsky0621ᚋwht�
 	return &res, err
 }
 
-func (ec *executionContext) marshalONoopPayload2githubᚗcomᚋsky0621ᚋwhtᚐNoopPayload(ctx context.Context, sel ast.SelectionSet, v NoopPayload) graphql.Marshaler {
+func (ec *executionContext) marshalONoopPayload2githubᚗcomᚋsky0621ᚋwhtᚐNoopPayload(ctx context.Context, sel ast.SelectionSet, v model.NoopPayload) graphql.Marshaler {
 	return ec._NoopPayload(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalONoopPayload2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopPayload(ctx context.Context, sel ast.SelectionSet, v *NoopPayload) graphql.Marshaler {
+func (ec *executionContext) marshalONoopPayload2ᚖgithubᚗcomᚋsky0621ᚋwhtᚐNoopPayload(ctx context.Context, sel ast.SelectionSet, v *model.NoopPayload) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
