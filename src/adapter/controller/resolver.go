@@ -1,4 +1,4 @@
-package app
+package controller
 
 // This file will not be regenerated automatically.
 //

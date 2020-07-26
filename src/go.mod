@@ -14,6 +14,6 @@ require (
 	github.com/urfave/cli/v2 v2.2.0 // indirect
 	github.com/vektah/dataloaden v0.3.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.0.1
-	golang.org/x/tools v0.0.0-20200724172932-b5fc9d354d99 // indirect
+	golang.org/x/tools v0.0.0-20200725200936-102e7d357031 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

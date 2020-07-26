@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	app "github.com/sky0621/wht"
+	"github.com/sky0621/wht/adapter/controller"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -16,7 +16,7 @@ import (
 func main() {
 	log.Print("helloworld3: starting server...")
 
-	srv := handler.NewDefaultServer(app.NewExecutableSchema(app.Config{Resolvers: &app.Resolver{}}))
+	srv := handler.NewDefaultServer(controller.NewExecutableSchema(controller.Config{Resolvers: &controller.Resolver{}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

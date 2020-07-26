@@ -1,4 +1,4 @@
-package app
+package controller
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -7,14 +7,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sky0621/wht/model"
+	"github.com/sky0621/wht/adapter/controller/gqlmodel"
 )
 
-func (r *mutationResolver) Noop(ctx context.Context, input *model.NoopInput) (*model.NoopPayload, error) {
+func (r *mutationResolver) Noop(ctx context.Context, input *gqlmodel.NoopInput) (*gqlmodel.NoopPayload, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Node(ctx context.Context, id string) (model.Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id string) (gqlmodel.Node, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
