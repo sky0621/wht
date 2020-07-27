@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  db:
+    restart: always
+    image: postgres:12-alpine
+    container_name: wht-container
+    ports:
+      - "11111:5432"
+    environment:
+      - DATABASE_HOST=localhost
+      - POSTGRES_DB=wht-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yuckyjuice
+      - PGPASSWORD=yuckyjuice
+    volumes:
+      - ./local-init:/docker-entrypoint-initdb.d/

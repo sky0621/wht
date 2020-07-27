@@ -1,0 +1,11 @@
+dev:
+  dialect: postgres
+  datasource: host=localhost port=25432 dbname=whtdb user=postgres password=yuckyjuice sslmode=disable
+  dir: migration
+  table: migration
+
+local:
+  dialect: postgres
+  datasource: host=localhost port=11111 dbname=whtdb user=postgres password=yuckyjuice sslmode=disable
+  dir: migration
+  table: migration
