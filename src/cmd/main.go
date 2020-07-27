@@ -23,19 +23,21 @@ func main() {
 	/*
 	 * DB connect setting
 	 */
-	var (
-		dbUser = os.Getenv("WHT_DB_USER")
-		dbPass = os.Getenv("WHT_DB_PASS")
-		//dbHost = os.Getenv("WHT_DB_HOST")
-		//dbPort = os.Getenv("WHT_DB_PORT")
-		instanceConnectionName = os.Getenv("WHT_DB_INSTANCE_CONNECTION_NAME")
-		dbName                 = os.Getenv("WHT_DB_NAME")
-	)
-
 	var dbURI string
-	dbURI = fmt.Sprintf("%s:%s@unix(/cloudsql/%s)/%s", dbUser, dbPass, instanceConnectionName, dbName)
-	//dbURI = fmt.Sprintf("host=%s user=%s password=%s port=%s database=%s", dbHost, dbUser, dbPass, dbPort, dbName)
-	//dbURI = "host=localhost port=15432 dbname=wolf-db user=postgres password=xxxx sslmode=disable"
+	if os.Getenv("WHT_ENV") == "local" {
+		var (
+			dbPass = os.Getenv("WHT_DB_PASS")
+		)
+		dbURI = fmt.Sprintf("host=localhost port=15432 dbname=wolf-db user=postgres password=%s sslmode=disable", dbPass)
+	} else {
+		var (
+			dbHost = os.Getenv("WHT_DB_HOST")
+			dbUser = os.Getenv("WHT_DB_USER")
+			dbPass = os.Getenv("WHT_DB_PASS")
+			dbName = os.Getenv("WHT_DB_NAME")
+		)
+		dbURI = fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbUser, dbPass, dbName)
+	}
 
 	// dbPool is the pool of database connections.
 	dbPool, err := sqlx.Open("postgres", dbURI)
@@ -43,6 +45,7 @@ func main() {
 		log.Println(err)
 		return
 	}
+
 	if err := dbPool.Ping(); err != nil {
 		log.Println(err)
 		return

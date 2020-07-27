@@ -27,23 +27,11 @@ if [[ -z "${db_name}" ]]; then
   exit 1
 fi
 
-db_instance_conn=${5:-}
-if [[ -z "${db_instance_conn}" ]]; then
-  echo -n "need db_instance_conn"
+db_host=${5:-}
+if [[ -z "${db_host}" ]]; then
+  echo -n "need db_host"
   exit 1
 fi
-
-#db_host=${5:-}
-#if [[ -z "${db_host}" ]]; then
-#  echo -n "need db_host"
-#  exit 1
-#fi
-
-#db_port=${6:-}
-#if [[ -z "${db_port}" ]]; then
-#  echo -n "need db_port"
-#  exit 1
-#fi
 
 gcloud run deploy wht \
   --image gcr.io/${project}/wht:latest \
@@ -51,5 +39,8 @@ gcloud run deploy wht \
   --project ${project} \
   --allow-unauthenticated \
   --region asia-northeast1 \
-  --set-env-vars WHT_DB_USER=${db_user},WHT_DB_PASS=${db_pass},WHT_DB_INSTANCE_CONNECTION_NAME=${db_instance_conn},WHT_DB_NAME=${db_name}
-#  --set-env-vars WHT_DB_USER=${db_user},WHT_DB_PASS=${db_pass},WHT_DB_HOST=${db_host},WHT_DB_PORT=${db_port},WHT_DB_NAME=${db_name}
+  --add-cloudsql-instances ${db_host} \
+  --set-env-vars WHT_DB_HOST=${db_host} \
+  --set-env-vars WHT_DB_USER=${db_user} \
+  --set-env-vars WHT_DB_PASS=${db_pass} \
+  --set-env-vars WHT_DB_NAME=${db_name}
