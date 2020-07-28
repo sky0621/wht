@@ -28,7 +28,7 @@ func main() {
 		var (
 			dbPass = os.Getenv("WHT_DB_PASS")
 		)
-		dbURI = fmt.Sprintf("host=localhost port=15432 dbname=wolf-db user=postgres password=%s sslmode=disable", dbPass)
+		dbURI = fmt.Sprintf("host=localhost port=11111 dbname=whtdb user=postgres password=%s sslmode=disable", dbPass)
 	} else {
 		var (
 			dbHost = os.Getenv("WHT_DB_HOST")
@@ -71,6 +71,6 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("helloworld: listening on port %s", port)
+	log.Printf("wht: listening on port %s", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
