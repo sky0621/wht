@@ -22,7 +22,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -v -o server
 
 # https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
 FROM gcr.io/distroless/base
-RUN apk add --no-cache ca-certificates
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/cmd/server /server
