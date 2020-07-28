@@ -9,9 +9,23 @@ services:
       - "11111:5432"
     environment:
       - DATABASE_HOST=localhost
-      - POSTGRES_DB=wht-db
+      - POSTGRES_DB=whtdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=yuckyjuice
       - PGPASSWORD=yuckyjuice
     volumes:
-      - ./local-init:/docker-entrypoint-initdb.d/
+      - ./local/data:/docker-entrypoint-initdb.d/
+  testdb:
+    restart: always
+    image: postgres:12-alpine
+    container_name: wht-test-container
+    ports:
+      - "11112:5432"
+    environment:
+      - DATABASE_HOST=localhost
+      - POSTGRES_DB=whtdbtest
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yuckyjuice
+      - PGPASSWORD=yuckyjuice
+    volumes:
+      - ./local_test/data:/docker-entrypoint-initdb.d/

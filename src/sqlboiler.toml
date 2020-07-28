@@ -1,0 +1,10 @@
+output   = "adapter/gateway/sqlboilermodel"
+pkgname  = "sqlboilermodel"
+
+[psql]
+  host   = "localhost"
+  port   = 11112
+  dbname = "whtdbtest"
+  user   = "postgres"
+  pass   = "yuckyjuice"
+  sslmode= "disable"

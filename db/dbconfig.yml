@@ -9,3 +9,9 @@ local:
   datasource: host=localhost port=11111 dbname=whtdb user=postgres password=yuckyjuice sslmode=disable
   dir: migration
   table: migration
+
+localtest:
+  dialect: postgres
+  datasource: host=localhost port=11112 dbname=whtdbtest user=postgres password=yuckyjuice sslmode=disable
+  dir: migration
+  table: migration
