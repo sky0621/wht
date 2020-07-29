@@ -1,4 +1,4 @@
-package controller
+package web
 
 import "github.com/jmoiron/sqlx"
 

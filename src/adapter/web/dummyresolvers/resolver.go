@@ -1,4 +1,4 @@
-package controller
+package web
 
 // This file will not be regenerated automatically.
 //

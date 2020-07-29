@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wht/adapter/controller"
+	"github.com/sky0621/wht/adapter/web"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 )
@@ -19,7 +19,7 @@ import (
 func buildLocal(ctx context.Context, cfg config) (app, error) {
 	wire.Build(
 		connectLocalDB,
-		controller.NewResolver,
+		web.NewResolver,
 		setupRouter,
 		newApp,
 	)

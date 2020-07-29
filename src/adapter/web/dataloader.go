@@ -1,4 +1,4 @@
-package controller
+package web
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sky0621/wht/adapter/controller/gqlmodel"
+	"github.com/sky0621/wht/adapter/web/gqlmodel"
 )
 
 const loadersKey = "dataLoaders"

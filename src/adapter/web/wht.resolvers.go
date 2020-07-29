@@ -1,4 +1,4 @@
-package controller
+package web
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wht/adapter/controller/gqlmodel"
 	"github.com/sky0621/wht/adapter/gateway"
+	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/sky0621/wht/application/util"

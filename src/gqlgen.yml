@@ -4,8 +4,8 @@ schema:
 
 # Where should the generated server code go?
 exec:
-  filename: adapter/controller/graphql_generated.go
-  package: controller
+  filename: adapter/web/graphql_generated.go
+  package: web
 
 # Uncomment to enable federation
 # federation:
@@ -14,14 +14,14 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: adapter/controller/gqlmodel/graphql_generated.go
+  filename: adapter/web/gqlmodel/graphql_generated.go
   package: gqlmodel
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: adapter/controller/dummyresolvers
-  package: controller
+  dir: adapter/web/dummyresolvers
+  package: web
 
 # Optional: turn on use `gqlgen:"fieldName"` tags in your models
 # struct_tag: json
@@ -35,7 +35,7 @@ omit_slice_element_pointers: true
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "github.com/sky0621/wht/adapter/controller/gqlmodel"
+  - "github.com/sky0621/wht/adapter/web/gqlmodel"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -49,11 +49,11 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-      - github.com/sky0621/wht/adapter/controller/gqlmodel.WhtID
+      - github.com/sky0621/wht/adapter/web/gqlmodel.WhtID
   Int:
     model:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
   Date:
-    model: github.com/sky0621/wht/adapter/controller/gqlmodel.Date
+    model: github.com/sky0621/wht/adapter/web/gqlmodel.Date

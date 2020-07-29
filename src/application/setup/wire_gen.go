@@ -8,9 +8,6 @@ package setup
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -19,11 +16,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wht/adapter/controller"
-	"github.com/sky0621/wht/adapter/controller/gqlmodel"
+	"github.com/sky0621/wht/adapter/web"
+	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
+	"log"
+	"time"
 )
 
 // Injectors from wire.go:
@@ -33,7 +32,7 @@ func build(ctx context.Context, cfg config) (app, error) {
 	if err != nil {
 		return app{}, err
 	}
-	resolver := controller.NewResolver(db)
+	resolver := web.NewResolver(db)
 	mux := setupRouter(cfg, resolver)
 	setupApp := newApp(db, mux)
 	return setupApp, nil
@@ -46,7 +45,7 @@ func buildLocal(ctx context.Context, cfg config) (app, error) {
 	if err != nil {
 		return app{}, err
 	}
-	resolver := controller.NewResolver(db)
+	resolver := web.NewResolver(db)
 	mux := setupRouter(cfg, resolver)
 	setupApp := newApp(db, mux)
 	return setupApp, nil
@@ -81,23 +80,23 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func setupRouter(cfg config, resolver *controller.Resolver) *chi.Mux {
+func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
-	r.Handle("/query", controller.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
 	return r
 }
 
-func graphQlServer(resolver *controller.Resolver) *handler.Server {
-	cfg := controller.Config{Resolvers: resolver}
+func graphQlServer(resolver *web.Resolver) *handler.Server {
+	cfg := web.Config{Resolvers: resolver}
 
 	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
 
 		return next(ctx)
 	}
-	srv := handler.New(controller.NewExecutableSchema(cfg))
+	srv := handler.New(web.NewExecutableSchema(cfg))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

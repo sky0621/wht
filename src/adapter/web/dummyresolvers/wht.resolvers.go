@@ -1,4 +1,4 @@
-package controller
+package web
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sky0621/wht/adapter/controller"
-	"github.com/sky0621/wht/adapter/controller/gqlmodel"
+	"github.com/sky0621/wht/adapter/web"
+	"github.com/sky0621/wht/adapter/web/gqlmodel"
 )
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
@@ -40,7 +40,7 @@ func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmod
 	panic(fmt.Errorf("not implemented"))
 }
 
-// Wht returns controller.WhtResolver implementation.
-func (r *Resolver) Wht() controller.WhtResolver { return &whtResolver{r} }
+// Wht returns web.WhtResolver implementation.
+func (r *Resolver) Wht() web.WhtResolver { return &whtResolver{r} }
 
 type whtResolver struct{ *Resolver }
