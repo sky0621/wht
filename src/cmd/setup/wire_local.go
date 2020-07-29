@@ -5,6 +5,7 @@ package setup
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/wire"
@@ -26,6 +27,8 @@ func buildLocal(ctx context.Context, cfg config) (app, error) {
 }
 
 func connectLocalDB(cfg config) (*sqlx.DB, error) {
+	log.Println("connectLocalDB() start...")
+
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
 

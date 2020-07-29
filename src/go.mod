@@ -20,5 +20,6 @@ require (
 	github.com/volatiletech/sqlboiler/v4 v4.2.0
 	github.com/volatiletech/strmangle v0.0.1
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
+	golang.org/x/tools v0.0.0-20200729041821-df70183b1872 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 )

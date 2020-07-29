@@ -39,6 +39,7 @@ gcloud run deploy wht \
   --project ${project} \
   --allow-unauthenticated \
   --region asia-northeast1 \
+  --set-env-vars WHT_ENV=gcp \
   --add-cloudsql-instances ${db_host} \
   --set-env-vars WHT_DB_HOST=${db_host} \
   --set-env-vars WHT_DB_USER=${db_user} \

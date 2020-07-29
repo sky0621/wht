@@ -20,15 +20,18 @@ const (
 )
 
 func ExecMain() ExitCode {
+	log.Println("ExecMain() start...")
 	cfg := newConfig()
-	log.Println(cfg)
+	log.Printf("Config:%#+v", cfg)
 
 	ctx := context.Background()
 	var app app
 	var err error
 	if cfg.IsLocal() {
+		log.Println("on Local...")
 		app, err = buildLocal(ctx, cfg)
 	} else {
+		log.Println("on GCP...")
 		app, err = build(ctx, cfg)
 	}
 	if err != nil {

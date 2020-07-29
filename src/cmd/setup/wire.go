@@ -36,12 +36,19 @@ func build(ctx context.Context, cfg config) (app, error) {
 }
 
 func connectDB(cfg config) (*sqlx.DB, error) {
+	log.Println("connectDB() start...")
+
 	dsn := fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBUser, cfg.DBPass, cfg.DBName)
+	log.Printf("DSN:%s", dsn)
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, xerrors.Errorf("failed to ping: %w", err)
 	}
 
 	// FIXME: 本番はNG?
