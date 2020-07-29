@@ -2,8 +2,59 @@
 
 package gqlmodel
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+	"time"
+
+	"github.com/99designs/gqlgen/graphql"
+)
+
 type Node interface {
 	IsNode()
+}
+
+// 画像コンテンツ
+type ImageContent struct {
+	ID string `json:"id"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+	// 画像パス
+	Path string `json:"path"`
+}
+
+func (ImageContent) IsContent() {}
+
+// 画像コンテンツインプット
+type ImageContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 画像
+	Image graphql.Upload `json:"image"`
+}
+
+// 動画コンテンツ
+type MovieContent struct {
+	ID string `json:"id"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+	// 動画パス
+	Path string `json:"path"`
+}
+
+func (MovieContent) IsContent() {}
+
+// 動画コンテンツインプット
+type MovieContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 動画
+	Movie graphql.Upload `json:"movie"`
+}
+
+type MutationResponse struct {
+	ID *string `json:"id"`
 }
 
 type NoopInput struct {
@@ -14,25 +65,201 @@ type NoopPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
-// 「今日こと」
-type Wht struct {
-	// ID
+// テキストコンテンツ
+type TextContent struct {
 	ID string `json:"id"`
-	// 記録日
-	RecordDate string `json:"recordDate"`
-	// タイトル
-	Title *string `json:"title"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
 	// テキスト
 	Text string `json:"text"`
 }
 
-func (Wht) IsNode() {}
+func (TextContent) IsContent() {}
 
-type WhtInput struct {
-	// 記録日
-	RecordDate string `json:"recordDate"`
-	// タイトル
-	Title *string `json:"title"`
+// テキストコンテンツインプット
+type TextContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
 	// テキスト
 	Text string `json:"text"`
+}
+
+// 音声コンテンツ
+type VoiceContent struct {
+	ID string `json:"id"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+	// 音声パス
+	Path string `json:"path"`
+}
+
+func (VoiceContent) IsContent() {}
+
+// 音声コンテンツインプット
+type VoiceContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 音声
+	Voice graphql.Upload `json:"voice"`
+}
+
+// 「今日こと」検索条件
+type WhtConditionInput struct {
+	// ID
+	ID *WhtID `json:"id"`
+	// 記録日
+	RecordDate *time.Time `json:"recordDate"`
+	// タイトル
+	Title *string `json:"title"`
+	// 検索方法
+	Compare *Compare `json:"compare"`
+}
+
+// 今日ことインプット
+type WhtInput struct {
+	// 記録日
+	RecordDate time.Time `json:"recordDate"`
+	// タイトル
+	Title *string `json:"title"`
+}
+
+// 検索方法
+type Compare string
+
+const (
+	// 完全一致
+	CompareEqual Compare = "Equal"
+	// 曖昧検索
+	CompareLike Compare = "Like"
+)
+
+var AllCompare = []Compare{
+	CompareEqual,
+	CompareLike,
+}
+
+func (e Compare) IsValid() bool {
+	switch e {
+	case CompareEqual, CompareLike:
+		return true
+	}
+	return false
+}
+
+func (e Compare) String() string {
+	return string(e)
+}
+
+func (e *Compare) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Compare(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Compare", str)
+	}
+	return nil
+}
+
+func (e Compare) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// コンテンツタイプ
+type ContentType string
+
+const (
+	// テキスト
+	ContentTypeText ContentType = "Text"
+	// 画像
+	ContentTypeImage ContentType = "Image"
+	// 音声
+	ContentTypeVoice ContentType = "Voice"
+	// 動画
+	ContentTypeMovie ContentType = "Movie"
+)
+
+var AllContentType = []ContentType{
+	ContentTypeText,
+	ContentTypeImage,
+	ContentTypeVoice,
+	ContentTypeMovie,
+}
+
+func (e ContentType) IsValid() bool {
+	switch e {
+	case ContentTypeText, ContentTypeImage, ContentTypeVoice, ContentTypeMovie:
+		return true
+	}
+	return false
+}
+
+func (e ContentType) String() string {
+	return string(e)
+}
+
+func (e *ContentType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentType", str)
+	}
+	return nil
+}
+
+func (e ContentType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Role string
+
+const (
+	RoleAdmin   Role = "ADMIN"
+	RoleManager Role = "MANAGER"
+	RoleEditor  Role = "EDITOR"
+	RoleViewer  Role = "VIEWER"
+	RoleGuest   Role = "GUEST"
+)
+
+var AllRole = []Role{
+	RoleAdmin,
+	RoleManager,
+	RoleEditor,
+	RoleViewer,
+	RoleGuest,
+}
+
+func (e Role) IsValid() bool {
+	switch e {
+	case RoleAdmin, RoleManager, RoleEditor, RoleViewer, RoleGuest:
+		return true
+	}
+	return false
+}
+
+func (e Role) String() string {
+	return string(e)
+}
+
+func (e *Role) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Role(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}
+
+func (e Role) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

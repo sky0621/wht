@@ -18,10 +18,10 @@ func (r *queryResolver) Node(ctx context.Context, id string) (gqlmodel.Node, err
 	panic(fmt.Errorf("not implemented"))
 }
 
-// Mutation returns MutationResolver implementation.
+// Mutation returns controller.MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
-// Query returns QueryResolver implementation.
+// Query returns controller.QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }

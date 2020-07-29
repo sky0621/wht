@@ -1,14 +1,53 @@
 
 extend type Mutation {
     "「今日こと」を登録"
-    createWht(wht: WhtInput!): ID!
+    createWht(wht: WhtInput!): MutationResponse @hasRole(role: EDITOR)
+    "テキストコンテンツを登録"
+    createTextContents(recordDate: Date!, inputs: [TextContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "画像コンテンツを登録"
+    createImageContents(recordDate: Date!, inputs: [ImageContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "音声コンテンツを登録"
+    createVoiceContents(recordDate: Date!, inputs: [VoiceContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "動画コンテンツを登録"
+    createMovieContents(recordDate: Date!, inputs: [MovieContentInput!]!): MutationResponse @hasRole(role: EDITOR)
 }
 
+"今日ことインプット"
 input WhtInput {
     "記録日"
-    recordDate: String!
+    recordDate: Date!
     "タイトル"
     title: String
+}
+
+"テキストコンテンツインプット"
+input TextContentInput {
+    "コンテンツ名"
+    name: String
     "テキスト"
     text: String!
+}
+
+"画像コンテンツインプット"
+input ImageContentInput {
+    "コンテンツ名"
+    name: String
+    "画像"
+    image: Upload!
+}
+
+"音声コンテンツインプット"
+input VoiceContentInput {
+    "コンテンツ名"
+    name: String
+    "音声"
+    voice: Upload!
+}
+
+"動画コンテンツインプット"
+input MovieContentInput {
+    "コンテンツ名"
+    name: String
+    "動画"
+    movie: Upload!
 }

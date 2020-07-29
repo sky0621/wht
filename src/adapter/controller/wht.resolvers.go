@@ -5,19 +5,109 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/wolf-bff/src/adapter"
 
 	"github.com/sky0621/wht/adapter/controller/gqlmodel"
+	"github.com/sky0621/wht/adapter/gateway"
+	"github.com/sky0621/wht/internal"
+	"github.com/sky0621/wht/service"
+	"github.com/sky0621/wht/service/domain"
 )
 
-func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (string, error) {
-	// FIXME:
-	return "9097d7a4-5a9b-4581-84e4-80b0db4282aa", nil
+// ------------------------------------------------------------------
+// Mutation
+// ------------------------------------------------------------------
+
+func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
+	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		id, err := service.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+			CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
+		return &adapter.TxResponse{CreatedID: id}, err
+	})
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+	return &gqlmodel.MutationResponse{ID: internal.FromInt64ToPStr(res.CreatedID)}, nil
 }
 
-func (r *queryResolver) FindWht(ctx context.Context) ([]gqlmodel.Wht, error) {
-	// FIXME:
-	t := "いい一日4"
-	return []gqlmodel.Wht{
-		{ID: "001", RecordDate: "2020-07-26", Title: &t, Text: "今日は、いい一日だった。"},
-	}, nil
+func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
+	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		var contents []domain.TextContent
+		for _, in := range inputs {
+			contents = append(contents, domain.NewTextContent(in.Name, in.Text))
+		}
+		err := service.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+			CreateTextContents(ctx, recordDate, contents)
+		return &adapter.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
+	})
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+	return &gqlmodel.MutationResponse{ID: internal.FromInt64ToPStr(res.CreatedID)}, nil
 }
+
+func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateMovieContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// ------------------------------------------------------------------
+// Query
+// ------------------------------------------------------------------
+
+func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
+	c := &domain.WhtCondition{}
+	if condition != nil {
+		id := condition.ID.DBUniqueID()
+		c.ID = &id
+	}
+
+	records, err := service.NewWht(gateway.NewWhtRepository(r.db), gateway.NewContentRepository(r.db)).
+		ReadWht(ctx, c)
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+
+	var results []gqlmodel.Wht
+	for _, r := range records {
+		if r.ID == nil || r.RecordDate == internal.NilTime {
+			err := errors.New("id or recordDate is nil")
+			fmt.Printf("%#+v", err) // TODO: use custom logger
+			return nil, err
+		}
+		results = append(results, gqlmodel.Wht{
+			ID:         gqlmodel.WhtID(*r.ID),
+			RecordDate: r.RecordDate,
+			Title:      r.Title,
+		})
+	}
+	return results, nil
+}
+
+func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
+	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+	return contents, nil
+}
+
+func (r *Resolver) Wht() WhtResolver { return &whtResolver{r} }
+
+type whtResolver struct{ *Resolver }

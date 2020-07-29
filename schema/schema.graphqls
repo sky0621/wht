@@ -2,9 +2,13 @@
 #
 # https://gqlgen.com/getting-started/
 
-# Global Object Identification
+# Global Object Identification ... 全データを共通のIDでユニーク化
 interface Node {
   id: ID!
+}
+
+type MutationResponse {
+  id: ID
 }
 
 type Query {
@@ -21,4 +25,22 @@ input NoopInput {
 
 type NoopPayload {
   clientMutationId: String
+}
+
+# Date ... format: "2006/01/02"
+scalar Date
+
+scalar Upload
+
+# WhtID ... format: urlEncoded("typeName:dbUniqueID")
+scalar WhtID
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+  ADMIN
+  MANAGER
+  EDITOR
+  VIEWER
+  GUEST
 }
