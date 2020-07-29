@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname $0)
 echo ${SCRIPT_DIR}
 cd ${SCRIPT_DIR} && cd ../src
 
-rm -rf ./adapter/gateway/sqlboilermodel/*
+rm -rf ./adapter/rdb/boiled/*
 
 # https://github.com/volatiletech/sqlboiler
 #go get -u github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql

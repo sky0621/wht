@@ -4,18 +4,14 @@ import "time"
 
 // 今日こと
 type Wht struct {
-	// ID
-	ID *int64
-	// 記録日
-	RecordDate time.Time
-	// タイトル
-	Title *string
+	ID         *int64    // ID
+	RecordDate time.Time // 記録日
+	Title      *string   // タイトル
+	Contents   []Content // コンテンツ群
 }
 
 // 「今日こと」検索条件
 type WhtCondition struct {
-	// ID
-	ID *int64
-	// 記録日
-	RecordDate *time.Time
+	ID         *int64     // ID
+	RecordDate *time.Time // 記録日
 }

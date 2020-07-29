@@ -1,5 +1,5 @@
-output   = "adapter/gateway/sqlboilermodel"
-pkgname  = "sqlboilermodel"
+output   = "adapter/rdb/boiled"
+pkgname  = "boiled"
 
 [psql]
   host   = "localhost"

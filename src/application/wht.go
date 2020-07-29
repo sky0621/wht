@@ -39,7 +39,7 @@ func (w Wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
  * CreateTextContent 「今日こと」のテキストコンテンツを作成し、作成済みの「今日こと」と紐付ける。
  * ただし、該当日の「今日こと」が未作成の場合は、「今日こと」を新規作成してから紐付ける。
  */
-func (w Wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContent) error {
+func (w Wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error {
 	already, err := w.GetWhtByRecordDate(ctx, recordDate)
 	if err != nil {
 		return xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
@@ -70,6 +70,10 @@ func (w Wht) ReadWht(ctx context.Context, condition *domain.WhtCondition) ([]*do
 	return w.whtRepo.Read(ctx, condition)
 }
 
+func (w Wht) ReadContents(ctx context.Context, whtID int64) ([]domain.Content, error) {
+	return w.contentRepo.ReadByWhtID(ctx, whtID)
+}
+
 func (w Wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error) {
 	records, err := w.whtRepo.Read(ctx, &domain.WhtCondition{
 		RecordDate: &recordDate,
@@ -98,5 +102,6 @@ type WhtRepository interface {
 }
 
 type ContentRepository interface {
-	CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContent) error
+	CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error
+	ReadByWhtID(ctx context.Context, whtID int64) ([]domain.Content, error)
 }

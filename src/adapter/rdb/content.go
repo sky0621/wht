@@ -1,9 +1,9 @@
-package gateway
+package rdb
 
 import (
 	"context"
 
-	"github.com/sky0621/wht/adapter/gateway/sqlboilermodel"
+	"github.com/sky0621/wht/adapter/rdb/boiled"
 	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
@@ -19,10 +19,10 @@ type contentRepository struct {
 	db boil.ContextExecutor
 }
 
-func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContent) error {
+func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error {
 	// TODO: バッチ形式を検討！
 	for _, in := range inputs {
-		mdl := sqlboilermodel.ContentText{
+		mdl := boiled.ContentText{
 			WHTID: whtID,
 			Name:  null.StringFromPtr(in.Name),
 			Text:  in.Text,
@@ -32,4 +32,16 @@ func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64,
 		}
 	}
 	return nil
+}
+
+func (r *contentRepository) ReadByWhtID(ctx context.Context, whtID int64) ([]domain.Content, error) {
+	// FIXME:
+	var results []domain.Content
+	for _, txtCon := range []*domain.TextContent{
+		{ID: 100, Text: "今日は、いい１日だったよ。"},
+		{ID: 200, Text: "今日も、いい１日だったよ。"},
+	} {
+		results = append(results, txtCon)
+	}
+	return results, nil
 }

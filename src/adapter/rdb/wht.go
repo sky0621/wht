@@ -1,9 +1,9 @@
-package gateway
+package rdb
 
 import (
 	"context"
 
-	"github.com/sky0621/wht/adapter/gateway/sqlboilermodel"
+	"github.com/sky0621/wht/adapter/rdb/boiled"
 	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
@@ -21,7 +21,7 @@ type whtRepository struct {
 }
 
 func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error) {
-	mdl := &sqlboilermodel.WHT{
+	mdl := &boiled.WHT{
 		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
 	}
@@ -35,13 +35,13 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 	var mod []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
-			mod = append(mod, sqlboilermodel.WHTWhere.ID.EQ(*condition.ID))
+			mod = append(mod, boiled.WHTWhere.ID.EQ(*condition.ID))
 		}
 		if condition.RecordDate != nil {
-			mod = append(mod, sqlboilermodel.WHTWhere.RecordDate.EQ(*condition.RecordDate))
+			mod = append(mod, boiled.WHTWhere.RecordDate.EQ(*condition.RecordDate))
 		}
 	}
-	records, err := sqlboilermodel.WHTS(mod...).All(ctx, r.db)
+	records, err := boiled.WHTS(mod...).All(ctx, r.db)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to select wht: %w", err)
 	}
@@ -57,20 +57,20 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 }
 
 func (r *whtRepository) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
-	mdl := &sqlboilermodel.WHT{
+	mdl := &boiled.WHT{
 		ID:         *in.ID,
 		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
 	}
 	if err := mdl.Upsert(ctx, r.db, true,
-		[]string{sqlboilermodel.WHTColumns.RecordDate},
+		[]string{boiled.WHTColumns.RecordDate},
 		boil.Whitelist(
-			sqlboilermodel.WHTColumns.Title,
-			sqlboilermodel.WHTColumns.UpdatedAt,
+			boiled.WHTColumns.Title,
+			boiled.WHTColumns.UpdatedAt,
 		),
 		boil.Whitelist(
-			sqlboilermodel.WHTColumns.RecordDate,
-			sqlboilermodel.WHTColumns.Title,
+			boiled.WHTColumns.RecordDate,
+			boiled.WHTColumns.Title,
 		),
 	); err != nil {
 		return nil, xerrors.Errorf("failed to upsert wht: %w", err)

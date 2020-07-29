@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wht/adapter/gateway"
+	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
@@ -22,10 +22,10 @@ import (
 // ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
-	res, err := gateway.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*gateway.TxResponse, error) {
-		id, err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+	res, err := rdb.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*rdb.TxResponse, error) {
+		id, err := application.NewWht(rdb.NewWhtRepository(txx), rdb.NewContentRepository(txx)).
 			CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
-		return &gateway.TxResponse{CreatedID: id}, err
+		return &rdb.TxResponse{CreatedID: id}, err
 	})
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
@@ -35,14 +35,19 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 }
 
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
-	res, err := gateway.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*gateway.TxResponse, error) {
-		var contents []domain.TextContent
+	res, err := rdb.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*rdb.TxResponse, error) {
+		var contents []domain.TextContentForCreate
 		for _, in := range inputs {
-			contents = append(contents, domain.NewTextContent(in.Name, in.Text))
+			contents = append(contents,
+				domain.TextContentForCreate{
+					Name: in.Name,
+					Text: in.Text,
+				},
+			)
 		}
-		err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+		err := application.NewWht(rdb.NewWhtRepository(txx), rdb.NewContentRepository(txx)).
 			CreateTextContents(ctx, recordDate, contents)
-		return &gateway.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
+		return &rdb.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
 	})
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
@@ -74,7 +79,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 		c.ID = &id
 	}
 
-	records, err := application.NewWht(gateway.NewWhtRepository(r.db), gateway.NewContentRepository(r.db)).
+	records, err := application.NewWht(rdb.NewWhtRepository(r.db), rdb.NewContentRepository(r.db)).
 		ReadWht(ctx, c)
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
