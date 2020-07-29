@@ -26,5 +26,5 @@ FROM gcr.io/distroless/base
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/cmd/server /server
 
-# Run the web service on container startup.
+# Run the web application on container startup.
 CMD ["/server"]

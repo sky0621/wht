@@ -14,9 +14,9 @@ import (
 
 	"github.com/sky0621/wht/adapter/controller/gqlmodel"
 	"github.com/sky0621/wht/adapter/gateway"
+	"github.com/sky0621/wht/application"
+	"github.com/sky0621/wht/application/domain"
 	"github.com/sky0621/wht/internal"
-	"github.com/sky0621/wht/service"
-	"github.com/sky0621/wht/service/domain"
 )
 
 // ------------------------------------------------------------------
@@ -25,7 +25,7 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		id, err := service.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+		id, err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
 			CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
 		return &adapter.TxResponse{CreatedID: id}, err
 	})
@@ -42,7 +42,7 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 		for _, in := range inputs {
 			contents = append(contents, domain.NewTextContent(in.Name, in.Text))
 		}
-		err := service.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+		err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
 			CreateTextContents(ctx, recordDate, contents)
 		return &adapter.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
 	})
@@ -76,7 +76,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 		c.ID = &id
 	}
 
-	records, err := service.NewWht(gateway.NewWhtRepository(r.db), gateway.NewContentRepository(r.db)).
+	records, err := application.NewWht(gateway.NewWhtRepository(r.db), gateway.NewContentRepository(r.db)).
 		ReadWht(ctx, c)
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger

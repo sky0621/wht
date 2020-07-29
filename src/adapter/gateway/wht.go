@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/sky0621/wht/adapter/gateway/sqlboilermodel"
-	"github.com/sky0621/wht/service"
-	"github.com/sky0621/wht/service/domain"
+	"github.com/sky0621/wht/application"
+	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/xerrors"
 )
 
-func NewWhtRepository(db boil.ContextExecutor) service.WhtRepository {
+func NewWhtRepository(db boil.ContextExecutor) application.WhtRepository {
 	return &whtRepository{db: db}
 }
 

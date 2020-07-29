@@ -1,11 +1,11 @@
-package service
+package application
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/sky0621/wht/service/domain"
+	"github.com/sky0621/wht/application/domain"
 	"golang.org/x/xerrors"
 )
 

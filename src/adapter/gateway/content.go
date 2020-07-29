@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/sky0621/wht/adapter/gateway/sqlboilermodel"
-	"github.com/sky0621/wht/service"
-	"github.com/sky0621/wht/service/domain"
+	"github.com/sky0621/wht/application"
+	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 )
 
-func NewContentRepository(db boil.ContextExecutor) service.ContentRepository {
+func NewContentRepository(db boil.ContextExecutor) application.ContentRepository {
 	return &contentRepository{db: db}
 }
 
