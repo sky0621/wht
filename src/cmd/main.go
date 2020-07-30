@@ -1,12 +1,56 @@
 package main
 
 import (
+	"context"
+	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	_ "github.com/lib/pq"
-	"github.com/sky0621/wht/application/setup"
+)
+
+const (
+	normalEnd   = 0
+	abnormalEnd = -1
 )
 
 func main() {
-	os.Exit(int(setup.ExecMain()))
+	os.Exit(execMain())
+}
+
+func execMain() int {
+	cfg := newConfig()
+
+	app, err := buildApp(context.Background(), cfg)
+	if err != nil {
+		log.Printf("%+v", err)
+		return abnormalEnd
+	}
+	defer app.Shutdown()
+
+	go func() {
+		q := make(chan os.Signal, 1)
+		signal.Notify(q, os.Interrupt, syscall.SIGTERM)
+		<-q
+		app.Shutdown()
+		os.Exit(abnormalEnd)
+	}()
+
+	log.Printf("wht: listening on port %s", cfg.WebPort)
+	if err := http.ListenAndServe(":"+cfg.WebPort, app.r); err != nil {
+		log.Printf("%+v", err)
+		return abnormalEnd
+	}
+	return normalEnd
+}
+
+func buildApp(ctx context.Context, cfg config) (*app, error) {
+	if cfg.IsLocal() {
+		log.Println("on Local...")
+		return buildLocal(ctx, cfg)
+	}
+	log.Println("on GCP...")
+	return build(ctx, cfg)
 }

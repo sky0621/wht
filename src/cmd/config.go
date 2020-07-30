@@ -1,6 +1,10 @@
-package setup
+package main
 
-import "github.com/kelseyhightower/envconfig"
+import (
+	"log"
+
+	"github.com/kelseyhightower/envconfig"
+)
 
 type config struct {
 	// 起動環境切り分け用
@@ -22,6 +26,7 @@ func newConfig() config {
 	if err := envconfig.Process("WHT", &c); err != nil {
 		return c
 	}
+	log.Printf("config:%#+v", c)
 	return c
 }
 

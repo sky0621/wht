@@ -22,7 +22,7 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 				Wait:     1 * time.Millisecond,
 				Fetch: func(keys []int64) ([][]gqlmodel.Content, []error) {
 					// FIXME:
-					//application.NewWht(rdb.NewWhtRepository(resolver.db), rdb.NewContentRepository(resolver.db)).ReadContents(r.Context(), )
+					//application.NewWht(rdb.NewWhtRepository(resolver.db), rdb.NewContentRepository(resolver.db)).ReadContents(r.Context())
 
 					return nil, nil
 				},

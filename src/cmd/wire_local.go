@@ -1,6 +1,6 @@
 //+build wireinject
 
-package setup
+package main
 
 import (
 	"context"
@@ -16,14 +16,14 @@ import (
 )
 
 // ローカルマシン上で動かす際の固有設定
-func buildLocal(ctx context.Context, cfg config) (app, error) {
+func buildLocal(ctx context.Context, cfg config) (*app, error) {
 	wire.Build(
 		connectLocalDB,
 		web.NewResolver,
 		setupRouter,
-		newApp,
+		appSet,
 	)
-	return app{}, nil
+	return nil, nil
 }
 
 func connectLocalDB(cfg config) (*sqlx.DB, error) {
