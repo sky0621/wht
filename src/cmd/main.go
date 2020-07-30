@@ -23,18 +23,18 @@ func main() {
 func execMain() int {
 	cfg := newConfig()
 
-	app, err := buildApp(context.Background(), cfg)
+	app, shutdownFunc, err := buildApp(context.Background(), cfg)
 	if err != nil {
 		log.Printf("%+v", err)
 		return abnormalEnd
 	}
-	defer app.Shutdown()
+	defer shutdownFunc()
 
 	go func() {
 		q := make(chan os.Signal, 1)
 		signal.Notify(q, os.Interrupt, syscall.SIGTERM)
 		<-q
-		app.Shutdown()
+		shutdownFunc()
 		os.Exit(abnormalEnd)
 	}()
 
@@ -46,7 +46,7 @@ func execMain() int {
 	return normalEnd
 }
 
-func buildApp(ctx context.Context, cfg config) (*app, error) {
+func buildApp(ctx context.Context, cfg config) (*app, func(), error) {
 	if cfg.IsLocal() {
 		log.Println("on Local...")
 		return buildLocal(ctx, cfg)

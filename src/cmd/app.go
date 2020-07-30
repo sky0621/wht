@@ -1,12 +1,13 @@
 package main
 
 import (
-	"log"
+	"github.com/sky0621/wht/adapter/rdb"
+
+	"github.com/sky0621/wht/application/usecase"
 
 	"github.com/google/wire"
 
 	"github.com/go-chi/chi"
-	"github.com/jmoiron/sqlx"
 )
 
 func init() {
@@ -14,26 +15,24 @@ func init() {
 }
 
 var appSet = wire.NewSet(
+	repositoryHandler,
+	usecaseHandler,
 	newApp,
 )
 
 type app struct {
-	db *sqlx.DB
-	r  *chi.Mux
+	r *chi.Mux
 }
 
-func newApp(db *sqlx.DB, r *chi.Mux) *app {
-	return &app{
-		db: db,
-		r:  r,
-	}
+func newApp(r *chi.Mux) *app {
+	return &app{r: r}
 }
 
-func (a app) Shutdown() {
-	if a.db == nil {
-		return
-	}
-	if err := a.db.Close(); err != nil {
-		log.Printf("%+v", err)
-	}
-}
+var usecaseHandler = wire.NewSet(
+	usecase.NewWht,
+)
+
+var repositoryHandler = wire.NewSet(
+	rdb.NewWhtRepository,
+	rdb.NewContentRepository,
+)

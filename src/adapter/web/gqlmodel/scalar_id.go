@@ -64,3 +64,8 @@ func (id WhtID) NodeID() string {
 func (id WhtID) DBUniqueID() int64 {
 	return int64(id)
 }
+
+func (id WhtID) DBUniqueIDPtr() *int64 {
+	r := id.DBUniqueID()
+	return &r
+}

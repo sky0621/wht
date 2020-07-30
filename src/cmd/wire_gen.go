@@ -16,8 +16,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/adapter/web"
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
+	"github.com/sky0621/wht/application/usecase"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
@@ -31,33 +33,43 @@ import (
 
 // Injectors from wire.go:
 
-func build(ctx context.Context, cfg config) (*app, error) {
-	db, err := connectDB(cfg)
+func build(ctx context.Context, cfg config) (*app, func(), error) {
+	contextExecutor, cleanup, err := connectDB(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	resolver := web.NewResolver(db)
+	wht := rdb.NewWhtRepository(contextExecutor)
+	content := rdb.NewContentRepository(contextExecutor)
+	usecaseWht := usecase.NewWht(wht, content)
+	resolver := web.NewResolver(usecaseWht)
 	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(db, mux)
-	return mainApp, nil
+	mainApp := newApp(mux)
+	return mainApp, func() {
+		cleanup()
+	}, nil
 }
 
 // Injectors from wire_local.go:
 
-func buildLocal(ctx context.Context, cfg config) (*app, error) {
-	db, err := connectLocalDB(cfg)
+func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
+	contextExecutor, cleanup, err := connectLocalDB(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	resolver := web.NewResolver(db)
+	wht := rdb.NewWhtRepository(contextExecutor)
+	content := rdb.NewContentRepository(contextExecutor)
+	usecaseWht := usecase.NewWht(wht, content)
+	resolver := web.NewResolver(usecaseWht)
 	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(db, mux)
-	return mainApp, nil
+	mainApp := newApp(mux)
+	return mainApp, func() {
+		cleanup()
+	}, nil
 }
 
 // wire.go:
 
-func connectDB(cfg config) (*sqlx.DB, error) {
+func connectDB(cfg config) (boil.ContextExecutor, func(), error) {
 	log.Println("connectDB() start...")
 
 	dsn := fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
@@ -66,22 +78,28 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+		return nil, nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, xerrors.Errorf("failed to ping: %w", err)
+		return nil, nil, xerrors.Errorf("failed to ping: %w", err)
 	}
 	boil.DebugMode = true
 
 	var loc *time.Location
 	loc, err = time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		return nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
+		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
 	}
 	boil.SetLocation(loc)
 
-	return db, nil
+	return db, func() {
+		if db != nil {
+			if err := db.Close(); err != nil {
+				log.Printf("%+v", err)
+			}
+		}
+	}, nil
 }
 
 func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
@@ -90,6 +108,7 @@ func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
 	return r
 }
 
@@ -133,7 +152,7 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 
 // wire_local.go:
 
-func connectLocalDB(cfg config) (*sqlx.DB, error) {
+func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 	log.Println("connectLocalDB() start...")
 
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
@@ -141,16 +160,22 @@ func connectLocalDB(cfg config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+		return nil, nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
 	}
 	boil.DebugMode = true
 
 	var loc *time.Location
 	loc, err = time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		return nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
+		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
 	}
 	boil.SetLocation(loc)
 
-	return db, nil
+	return db, func() {
+		if db != nil {
+			if err := db.Close(); err != nil {
+				log.Printf("%+v", err)
+			}
+		}
+	}, nil
 }

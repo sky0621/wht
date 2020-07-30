@@ -18,13 +18,11 @@ type Node interface {
 // 画像コンテンツ
 type ImageContent struct {
 	ID string `json:"id"`
-	// コンテンツタイプ
-	ContentType ContentType `json:"contentType"`
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 画像パス
 	Path string `json:"path"`
 }
-
-func (ImageContent) IsContent() {}
 
 // 画像コンテンツインプット
 type ImageContentInput struct {
@@ -37,13 +35,11 @@ type ImageContentInput struct {
 // 動画コンテンツ
 type MovieContent struct {
 	ID string `json:"id"`
-	// コンテンツタイプ
-	ContentType ContentType `json:"contentType"`
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 動画パス
 	Path string `json:"path"`
 }
-
-func (MovieContent) IsContent() {}
 
 // 動画コンテンツインプット
 type MovieContentInput struct {
@@ -68,13 +64,11 @@ type NoopPayload struct {
 // テキストコンテンツ
 type TextContent struct {
 	ID string `json:"id"`
-	// コンテンツタイプ
-	ContentType ContentType `json:"contentType"`
+	// コンテンツ名
+	Name *string `json:"name"`
 	// テキスト
 	Text string `json:"text"`
 }
-
-func (TextContent) IsContent() {}
 
 // テキストコンテンツインプット
 type TextContentInput struct {
@@ -87,13 +81,11 @@ type TextContentInput struct {
 // 音声コンテンツ
 type VoiceContent struct {
 	ID string `json:"id"`
-	// コンテンツタイプ
-	ContentType ContentType `json:"contentType"`
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 音声パス
 	Path string `json:"path"`
 }
-
-func (VoiceContent) IsContent() {}
 
 // 音声コンテンツインプット
 type VoiceContentInput struct {
@@ -164,56 +156,6 @@ func (e *Compare) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Compare) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-// コンテンツタイプ
-type ContentType string
-
-const (
-	// テキスト
-	ContentTypeText ContentType = "Text"
-	// 画像
-	ContentTypeImage ContentType = "Image"
-	// 音声
-	ContentTypeVoice ContentType = "Voice"
-	// 動画
-	ContentTypeMovie ContentType = "Movie"
-)
-
-var AllContentType = []ContentType{
-	ContentTypeText,
-	ContentTypeImage,
-	ContentTypeVoice,
-	ContentTypeMovie,
-}
-
-func (e ContentType) IsValid() bool {
-	switch e {
-	case ContentTypeText, ContentTypeImage, ContentTypeVoice, ContentTypeMovie:
-		return true
-	}
-	return false
-}
-
-func (e ContentType) String() string {
-	return string(e)
-}
-
-func (e *ContentType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ContentType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ContentType", str)
-	}
-	return nil
-}
-
-func (e ContentType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

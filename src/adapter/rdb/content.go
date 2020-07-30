@@ -3,23 +3,24 @@ package rdb
 import (
 	"context"
 
+	"github.com/sky0621/wht/application/repository"
+
 	"github.com/sky0621/wht/adapter/rdb/boiled"
-	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 )
 
-func NewContentRepository(db boil.ContextExecutor) application.ContentRepository {
-	return &contentRepository{db: db}
+func NewContentRepository(db boil.ContextExecutor) repository.Content {
+	return &content{db: db}
 }
 
-type contentRepository struct {
+type content struct {
 	db boil.ContextExecutor
 }
 
-func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error {
+func (r *content) CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error {
 	// TODO: バッチ形式を検討！
 	for _, in := range inputs {
 		mdl := boiled.ContentText{
@@ -34,7 +35,7 @@ func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64,
 	return nil
 }
 
-func (r *contentRepository) ReadByWhtID(ctx context.Context, whtID int64) ([]domain.Content, error) {
+func (r *content) ReadByWhtID(ctx context.Context, whtID int64) ([]domain.Content, error) {
 	// FIXME:
 	var results []domain.Content
 	for _, txtCon := range []*domain.TextContent{

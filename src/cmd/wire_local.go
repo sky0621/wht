@@ -16,17 +16,17 @@ import (
 )
 
 // ローカルマシン上で動かす際の固有設定
-func buildLocal(ctx context.Context, cfg config) (*app, error) {
+func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 	wire.Build(
 		connectLocalDB,
+		appSet,
 		web.NewResolver,
 		setupRouter,
-		appSet,
 	)
-	return nil, nil
+	return nil, nil, nil
 }
 
-func connectLocalDB(cfg config) (*sqlx.DB, error) {
+func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 	log.Println("connectLocalDB() start...")
 
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
@@ -34,7 +34,7 @@ func connectLocalDB(cfg config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+		return nil, nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
 	}
 
 	boil.DebugMode = true
@@ -42,9 +42,15 @@ func connectLocalDB(cfg config) (*sqlx.DB, error) {
 	var loc *time.Location
 	loc, err = time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		return nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
+		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
 	}
 	boil.SetLocation(loc)
 
-	return db, nil
+	return db, func() {
+		if db != nil {
+			if err := db.Close(); err != nil {
+				log.Printf("%+v", err)
+			}
+		}
+	}, nil
 }

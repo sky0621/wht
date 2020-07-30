@@ -9,10 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
-	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/sky0621/wht/application/util"
 )
@@ -22,38 +19,20 @@ import (
 // ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
-	res, err := rdb.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*rdb.TxResponse, error) {
-		id, err := application.NewWht(rdb.NewWhtRepository(txx), rdb.NewContentRepository(txx)).
-			CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
-		return &rdb.TxResponse{CreatedID: id}, err
-	})
+	id, err := r.wht.CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-	return &gqlmodel.MutationResponse{ID: util.FromInt64ToPStr(res.CreatedID)}, nil
+	return &gqlmodel.MutationResponse{ID: util.FromInt64ToPStr(id)}, nil
 }
 
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
-	res, err := rdb.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*rdb.TxResponse, error) {
-		var contents []domain.TextContentForCreate
-		for _, in := range inputs {
-			contents = append(contents,
-				domain.TextContentForCreate{
-					Name: in.Name,
-					Text: in.Text,
-				},
-			)
-		}
-		err := application.NewWht(rdb.NewWhtRepository(txx), rdb.NewContentRepository(txx)).
-			CreateTextContents(ctx, recordDate, contents)
-		return &rdb.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
-	})
-	if err != nil {
+	if err := r.wht.CreateTextContents(ctx, recordDate, gqlmodel.ToTextContentForCreate(inputs)); err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-	return &gqlmodel.MutationResponse{ID: util.FromInt64ToPStr(res.CreatedID)}, nil
+	return &gqlmodel.MutationResponse{}, nil
 }
 
 func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
@@ -72,15 +51,13 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, recordDate t
 // Query
 // ------------------------------------------------------------------
 
-func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
-	c := &domain.WhtCondition{}
-	if condition != nil {
-		id := condition.ID.DBUniqueID()
-		c.ID = &id
+func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
+	condition := &domain.WhtCondition{}
+	if c != nil {
+		condition.ID = c.ID.DBUniqueIDPtr()
 	}
 
-	records, err := application.NewWht(rdb.NewWhtRepository(r.db), rdb.NewContentRepository(r.db)).
-		ReadWht(ctx, c)
+	records, err := r.wht.ReadWhts(ctx, condition)
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
@@ -102,13 +79,29 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 	return results, nil
 }
 
-func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
-	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
-	if err != nil {
-		fmt.Printf("%#+v", err) // TODO: use custom logger
-		return nil, err
-	}
-	return contents, nil
+//func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
+//	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
+//	if err != nil {
+//		fmt.Printf("%#+v", err) // TODO: use custom logger
+//		return nil, err
+//	}
+//	return contents, nil
+//}
+
+func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *whtResolver) ImageContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.ImageContent, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *whtResolver) VoiceContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.VoiceContent, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *whtResolver) MovieContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.MovieContent, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *Resolver) Wht() WhtResolver { return &whtResolver{r} }

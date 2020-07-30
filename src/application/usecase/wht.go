@@ -1,4 +1,4 @@
-package application
+package usecase
 
 import (
 	"context"
@@ -6,23 +6,33 @@ import (
 	"time"
 
 	"github.com/sky0621/wht/application/domain"
+	"github.com/sky0621/wht/application/repository"
 	"golang.org/x/xerrors"
 )
 
-func NewWht(whtRepo WhtRepository, contentRepo ContentRepository) *Wht {
-	return &Wht{whtRepo: whtRepo, contentRepo: contentRepo}
+type Wht interface {
+	CreateWht(ctx context.Context, in domain.Wht) (int64, error)
+	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error
+	ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
+	//ReadContents(ctx context.Context, whtIDs []int64) ([]*domain.Content, error)
+	GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error)
+	UpsertWht(ctx context.Context, in domain.Wht) (int64, error)
 }
 
-type Wht struct {
-	whtRepo     WhtRepository
-	contentRepo ContentRepository
+func NewWht(whtRepo repository.Wht, contentRepo repository.Content) Wht {
+	return &wht{whtRepo: whtRepo, contentRepo: contentRepo}
+}
+
+type wht struct {
+	whtRepo     repository.Wht
+	contentRepo repository.Content
 }
 
 /*
  * CreateWht 「今日こと」を作成し、作成した「今日こと」のユニークIDを返す。
  * ただし、該当日の「今日こと」が作成済みの場合は作成せず、既存の「今日こと」のユニークIDを返す。
  */
-func (w Wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
+func (w wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
 	already, err := w.GetWhtByRecordDate(ctx, in.RecordDate)
 	if err != nil {
 		return 0, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", in.RecordDate, err)
@@ -39,7 +49,7 @@ func (w Wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
  * CreateTextContent 「今日こと」のテキストコンテンツを作成し、作成済みの「今日こと」と紐付ける。
  * ただし、該当日の「今日こと」が未作成の場合は、「今日こと」を新規作成してから紐付ける。
  */
-func (w Wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error {
+func (w wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error {
 	already, err := w.GetWhtByRecordDate(ctx, recordDate)
 	if err != nil {
 		return xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
@@ -66,15 +76,15 @@ func (w Wht) CreateTextContents(ctx context.Context, recordDate time.Time, input
 	return nil
 }
 
-func (w Wht) ReadWht(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
+func (w wht) ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
 	return w.whtRepo.Read(ctx, condition)
 }
 
-func (w Wht) ReadContents(ctx context.Context, whtID int64) ([]domain.Content, error) {
-	return w.contentRepo.ReadByWhtID(ctx, whtID)
-}
+//func (w wht) ReadContents(ctx context.Context, whtID int64) ([]*domain.Content, error) {
+//	return w.contentRepo.ReadByWhtID(ctx, whtID)
+//}
 
-func (w Wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error) {
+func (w wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error) {
 	records, err := w.whtRepo.Read(ctx, &domain.WhtCondition{
 		RecordDate: &recordDate,
 	})
@@ -91,17 +101,6 @@ func (w Wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*dom
 	}
 }
 
-func (w Wht) UpsertWht(ctx context.Context, in domain.Wht) (int64, error) {
+func (w wht) UpsertWht(ctx context.Context, in domain.Wht) (int64, error) {
 	return w.whtRepo.Create(ctx, in)
-}
-
-type WhtRepository interface {
-	Create(ctx context.Context, in domain.Wht) (int64, error)
-	Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
-	Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error)
-}
-
-type ContentRepository interface {
-	CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error
-	ReadByWhtID(ctx context.Context, whtID int64) ([]domain.Content, error)
 }

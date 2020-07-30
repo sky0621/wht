@@ -3,8 +3,9 @@ package rdb
 import (
 	"context"
 
+	"github.com/sky0621/wht/application/repository"
+
 	"github.com/sky0621/wht/adapter/rdb/boiled"
-	"github.com/sky0621/wht/application"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -12,15 +13,15 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func NewWhtRepository(db boil.ContextExecutor) application.WhtRepository {
-	return &whtRepository{db: db}
+func NewWhtRepository(db boil.ContextExecutor) repository.Wht {
+	return &wht{db: db}
 }
 
-type whtRepository struct {
+type wht struct {
 	db boil.ContextExecutor
 }
 
-func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error) {
+func (r *wht) Create(ctx context.Context, in domain.Wht) (int64, error) {
 	mdl := &boiled.WHT{
 		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
@@ -31,7 +32,7 @@ func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error
 	return mdl.ID, nil
 }
 
-func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
+func (r *wht) Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
 	var mod []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
@@ -56,7 +57,7 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 	return results, nil
 }
 
-func (r *whtRepository) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
+func (r *wht) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
 	mdl := &boiled.WHT{
 		ID:         *in.ID,
 		RecordDate: in.RecordDate,

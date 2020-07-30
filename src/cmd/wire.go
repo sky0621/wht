@@ -25,17 +25,17 @@ import (
 )
 
 // デプロイ先インフラで動かす際の設定
-func build(ctx context.Context, cfg config) (*app, error) {
+func build(ctx context.Context, cfg config) (*app, func(), error) {
 	wire.Build(
 		connectDB,
+		appSet,
 		web.NewResolver,
 		setupRouter,
-		appSet,
 	)
-	return nil, nil
+	return nil, nil, nil
 }
 
-func connectDB(cfg config) (*sqlx.DB, error) {
+func connectDB(cfg config) (boil.ContextExecutor, func(), error) {
 	log.Println("connectDB() start...")
 
 	dsn := fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
@@ -44,11 +44,11 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+		return nil, nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, xerrors.Errorf("failed to ping: %w", err)
+		return nil, nil, xerrors.Errorf("failed to ping: %w", err)
 	}
 
 	// FIXME: 本番はNG?
@@ -57,11 +57,17 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 	var loc *time.Location
 	loc, err = time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		return nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
+		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
 	}
 	boil.SetLocation(loc)
 
-	return db, nil
+	return db, func() {
+		if db != nil {
+			if err := db.Close(); err != nil {
+				log.Printf("%+v", err)
+			}
+		}
+	}, nil
 }
 
 func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
@@ -71,6 +77,7 @@ func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
 	return r
 }
 

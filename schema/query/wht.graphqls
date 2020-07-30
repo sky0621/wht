@@ -32,61 +32,48 @@ type Wht implements Node{
     recordDate: Date!
     "タイトル"
     title: String
-    "コンテンツリスト"
-    contents: [Content!]!
-}
-
-"コンテンツタイプ"
-enum ContentType {
-    "テキスト"
-    Text
-    "画像"
-    Image
-    "音声"
-    Voice
-    "動画"
-    Movie
-}
-
-"コンテンツ"
-interface Content {
-    id: ID!
-    "コンテンツタイプ"
-    contentType: ContentType!
+    "テキストコンテンツ"
+    textContents: [TextContent!]
+    "画像コンテンツ"
+    imageContents: [ImageContent!]
+    "画像コンテンツ"
+    voiceContents: [VoiceContent!]
+    "動画コンテンツ"
+    movieContents: [MovieContent!]
 }
 
 "テキストコンテンツ"
-type TextContent implements Content {
+type TextContent {
     id: ID!
-    "コンテンツタイプ"
-    contentType: ContentType!
+    "コンテンツ名"
+    name: String
     "テキスト"
     text: String!
 }
 
 "画像コンテンツ"
-type ImageContent implements Content {
+type ImageContent {
     id: ID!
-    "コンテンツタイプ"
-    contentType: ContentType!
+    "コンテンツ名"
+    name: String
     "画像パス"
     path: String!
 }
 
 "音声コンテンツ"
-type VoiceContent implements Content {
+type VoiceContent {
     id: ID!
-    "コンテンツタイプ"
-    contentType: ContentType!
+    "コンテンツ名"
+    name: String
     "音声パス"
     path: String!
 }
 
 "動画コンテンツ"
-type MovieContent implements Content {
+type MovieContent {
     id: ID!
-    "コンテンツタイプ"
-    contentType: ContentType!
+    "コンテンツ名"
+    name: String
     "動画パス"
     path: String!
 }
