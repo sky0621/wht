@@ -89,7 +89,12 @@ func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInp
 //}
 
 func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error) {
-	panic(fmt.Errorf("not implemented"))
+	contents, err := For(ctx).textContentLoader.Load(obj.ID.DBUniqueID())
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+	return contents, nil
 }
 
 func (r *whtResolver) ImageContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.ImageContent, error) {

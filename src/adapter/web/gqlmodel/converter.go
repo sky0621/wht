@@ -14,3 +14,15 @@ func ToTextContentForCreate(inputs []TextContentInput) []domain.TextContentForCr
 	}
 	return contents
 }
+
+func FromTextContent(inputs []*domain.TextContent) []*TextContent {
+	var results []*TextContent
+	for _, in := range inputs {
+		results = append(results, &TextContent{
+			ID:   in.ID,
+			Name: in.Name,
+			Text: in.Text,
+		})
+	}
+	return results
+}

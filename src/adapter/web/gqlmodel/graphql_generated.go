@@ -15,30 +15,12 @@ type Node interface {
 	IsNode()
 }
 
-// 画像コンテンツ
-type ImageContent struct {
-	ID string `json:"id"`
-	// コンテンツ名
-	Name *string `json:"name"`
-	// 画像パス
-	Path string `json:"path"`
-}
-
 // 画像コンテンツインプット
 type ImageContentInput struct {
 	// コンテンツ名
 	Name *string `json:"name"`
 	// 画像
 	Image graphql.Upload `json:"image"`
-}
-
-// 動画コンテンツ
-type MovieContent struct {
-	ID string `json:"id"`
-	// コンテンツ名
-	Name *string `json:"name"`
-	// 動画パス
-	Path string `json:"path"`
 }
 
 // 動画コンテンツインプット
@@ -61,30 +43,12 @@ type NoopPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
-// テキストコンテンツ
-type TextContent struct {
-	ID string `json:"id"`
-	// コンテンツ名
-	Name *string `json:"name"`
-	// テキスト
-	Text string `json:"text"`
-}
-
 // テキストコンテンツインプット
 type TextContentInput struct {
 	// コンテンツ名
 	Name *string `json:"name"`
 	// テキスト
 	Text string `json:"text"`
-}
-
-// 音声コンテンツ
-type VoiceContent struct {
-	ID string `json:"id"`
-	// コンテンツ名
-	Name *string `json:"name"`
-	// 音声パス
-	Path string `json:"path"`
 }
 
 // 音声コンテンツインプット

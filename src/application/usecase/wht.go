@@ -14,7 +14,7 @@ type Wht interface {
 	CreateWht(ctx context.Context, in domain.Wht) (int64, error)
 	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error
 	ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
-	//ReadContents(ctx context.Context, whtIDs []int64) ([]*domain.Content, error)
+	ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.TextContent, error)
 	GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error)
 	UpsertWht(ctx context.Context, in domain.Wht) (int64, error)
 }
@@ -80,9 +80,24 @@ func (w wht) ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*d
 	return w.whtRepo.Read(ctx, condition)
 }
 
-//func (w wht) ReadContents(ctx context.Context, whtID int64) ([]*domain.Content, error) {
-//	return w.contentRepo.ReadByWhtID(ctx, whtID)
-//}
+func (w wht) ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.TextContent, error) {
+	contents, err := w.contentRepo.ReadTextContents(ctx, &domain.TextContentCondition{WhtIDs: whtIDs})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to ReadTextContents[WhtIDs:%#+v]: %w", whtIDs, err)
+	}
+	var results map[int64][]*domain.TextContent
+	for _, content := range contents {
+		for _, whtID := range whtIDs {
+			if content.ID
+			results[whtID] =
+		}
+
+	}
+	for _, c := range contents {
+		results[c.]
+	}
+	return results, nil
+}
 
 func (w wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error) {
 	records, err := w.whtRepo.Read(ctx, &domain.WhtCondition{
@@ -102,5 +117,6 @@ func (w wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*dom
 }
 
 func (w wht) UpsertWht(ctx context.Context, in domain.Wht) (int64, error) {
+	// TODO: ?
 	return w.whtRepo.Create(ctx, in)
 }

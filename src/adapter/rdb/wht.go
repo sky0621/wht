@@ -33,16 +33,16 @@ func (r *wht) Create(ctx context.Context, in domain.Wht) (int64, error) {
 }
 
 func (r *wht) Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
-	var mod []qm.QueryMod
+	var mods []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
-			mod = append(mod, boiled.WHTWhere.ID.EQ(*condition.ID))
+			mods = append(mods, boiled.WHTWhere.ID.EQ(*condition.ID))
 		}
 		if condition.RecordDate != nil {
-			mod = append(mod, boiled.WHTWhere.RecordDate.EQ(*condition.RecordDate))
+			mods = append(mods, boiled.WHTWhere.RecordDate.EQ(*condition.RecordDate))
 		}
 	}
-	records, err := boiled.WHTS(mod...).All(ctx, r.db)
+	records, err := boiled.WHTS(mods...).All(ctx, r.db)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to select wht: %w", err)
 	}

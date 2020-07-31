@@ -1,6 +1,37 @@
 package gqlmodel
 
-// コンテンツ
-type Content interface {
-	IsContent()
+// テキストコンテンツ
+type TextContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// テキスト
+	Text string `json:"text"`
+}
+
+// 画像コンテンツ
+type ImageContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 画像パス
+	Path string `json:"path"`
+}
+
+// 音声コンテンツ
+type VoiceContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 音声パス
+	Path string `json:"path"`
+}
+
+// 動画コンテンツ
+type MovieContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 動画パス
+	Path string `json:"path"`
 }
