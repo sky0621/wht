@@ -11,12 +11,12 @@ import (
 )
 
 type Wht interface {
-	CreateWht(ctx context.Context, in domain.Wht) (int64, error)
-	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error
+	CreateWht(ctx context.Context, in *domain.WhtForCreate) (int64, error)
+	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []*domain.TextContentForCreate) error
 	ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
 	ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.TextContent, error)
 	GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error)
-	UpsertWht(ctx context.Context, in domain.Wht) (int64, error)
+	UpsertWht(ctx context.Context, in *domain.WhtForCreate) (int64, error)
 }
 
 func NewWht(whtRepo repository.Wht, contentRepo repository.Content) Wht {
@@ -32,16 +32,15 @@ type wht struct {
  * CreateWht 「今日こと」を作成し、作成した「今日こと」のユニークIDを返す。
  * ただし、該当日の「今日こと」が作成済みの場合は作成せず、既存の「今日こと」のユニークIDを返す。
  */
-func (w wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
+func (w wht) CreateWht(ctx context.Context, in *domain.WhtForCreate) (int64, error) {
 	already, err := w.GetWhtByRecordDate(ctx, in.RecordDate)
 	if err != nil {
 		return 0, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", in.RecordDate, err)
 	}
 	if already != nil {
 		fmt.Println("already exists") // TODO: use custom logger
-		return *already.ID, nil
+		return already.ID, nil
 	}
-
 	return w.whtRepo.Create(ctx, in)
 }
 
@@ -49,7 +48,7 @@ func (w wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
  * CreateTextContent 「今日こと」のテキストコンテンツを作成し、作成済みの「今日こと」と紐付ける。
  * ただし、該当日の「今日こと」が未作成の場合は、「今日こと」を新規作成してから紐付ける。
  */
-func (w wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []domain.TextContentForCreate) error {
+func (w wht) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []*domain.TextContentForCreate) error {
 	already, err := w.GetWhtByRecordDate(ctx, recordDate)
 	if err != nil {
 		return xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
@@ -59,14 +58,14 @@ func (w wht) CreateTextContents(ctx context.Context, recordDate time.Time, input
 	if already == nil {
 		var err error
 		// まず、該当日の分の「今日こと」を作成
-		whtID, err = w.whtRepo.Create(ctx, domain.Wht{
+		whtID, err = w.whtRepo.Create(ctx, &domain.WhtForCreate{
 			RecordDate: recordDate,
 		})
 		if err != nil {
 			return xerrors.Errorf("failed to Create: %w", err)
 		}
 	} else {
-		whtID = *already.ID
+		whtID = already.ID
 	}
 
 	// テキストコンテンツを作成
@@ -85,16 +84,13 @@ func (w wht) ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]
 	if err != nil {
 		return nil, xerrors.Errorf("failed to ReadTextContents[WhtIDs:%#+v]: %w", whtIDs, err)
 	}
-	var results map[int64][]*domain.TextContent
+	results := make(map[int64][]*domain.TextContent)
 	for _, content := range contents {
 		for _, whtID := range whtIDs {
-			if content.ID
-			results[whtID] =
+			if content.WhtID == whtID {
+				results[whtID] = append(results[whtID], content)
+			}
 		}
-
-	}
-	for _, c := range contents {
-		results[c.]
 	}
 	return results, nil
 }
@@ -116,7 +112,7 @@ func (w wht) GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*dom
 	}
 }
 
-func (w wht) UpsertWht(ctx context.Context, in domain.Wht) (int64, error) {
+func (w wht) UpsertWht(ctx context.Context, in *domain.WhtForCreate) (int64, error) {
 	// TODO: ?
 	return w.whtRepo.Create(ctx, in)
 }

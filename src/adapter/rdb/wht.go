@@ -21,7 +21,7 @@ type wht struct {
 	db boil.ContextExecutor
 }
 
-func (r *wht) Create(ctx context.Context, in domain.Wht) (int64, error) {
+func (r *wht) Create(ctx context.Context, in *domain.WhtForCreate) (int64, error) {
 	mdl := &boiled.WHT{
 		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
@@ -49,7 +49,7 @@ func (r *wht) Read(ctx context.Context, condition *domain.WhtCondition) ([]*doma
 	var results []*domain.Wht
 	for _, r := range records {
 		results = append(results, &domain.Wht{
-			ID:         &r.ID,
+			ID:         r.ID,
 			RecordDate: r.RecordDate,
 			Title:      r.Title.Ptr(),
 		})
@@ -59,7 +59,7 @@ func (r *wht) Read(ctx context.Context, condition *domain.WhtCondition) ([]*doma
 
 func (r *wht) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
 	mdl := &boiled.WHT{
-		ID:         *in.ID,
+		ID:         in.ID,
 		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
 	}
@@ -77,7 +77,7 @@ func (r *wht) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
 		return nil, xerrors.Errorf("failed to upsert wht: %w", err)
 	}
 	return &domain.Wht{
-		ID:         &mdl.ID,
+		ID:         mdl.ID,
 		RecordDate: mdl.RecordDate,
 		Title:      mdl.Title.Ptr(),
 	}, nil

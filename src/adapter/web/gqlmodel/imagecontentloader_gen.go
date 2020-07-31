@@ -10,7 +10,7 @@ import (
 // ImageContentLoaderConfig captures the config to create a new ImageContentLoader
 type ImageContentLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int64) ([][]*ImageContent, []error)
+	Fetch func(keys []int64) ([][]ImageContent, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -31,7 +31,7 @@ func NewImageContentLoader(config ImageContentLoaderConfig) *ImageContentLoader 
 // ImageContentLoader batches and caches requests
 type ImageContentLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int64) ([][]*ImageContent, []error)
+	fetch func(keys []int64) ([][]ImageContent, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -42,7 +42,7 @@ type ImageContentLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int64][]*ImageContent
+	cache map[int64][]ImageContent
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -54,25 +54,25 @@ type ImageContentLoader struct {
 
 type imageContentLoaderBatch struct {
 	keys    []int64
-	data    [][]*ImageContent
+	data    [][]ImageContent
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
 // Load a ImageContent by key, batching and caching will be applied automatically
-func (l *ImageContentLoader) Load(key int64) ([]*ImageContent, error) {
+func (l *ImageContentLoader) Load(key int64) ([]ImageContent, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a ImageContent.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ImageContentLoader) LoadThunk(key int64) func() ([]*ImageContent, error) {
+func (l *ImageContentLoader) LoadThunk(key int64) func() ([]ImageContent, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() ([]*ImageContent, error) {
+		return func() ([]ImageContent, error) {
 			return it, nil
 		}
 	}
@@ -83,10 +83,10 @@ func (l *ImageContentLoader) LoadThunk(key int64) func() ([]*ImageContent, error
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() ([]*ImageContent, error) {
+	return func() ([]ImageContent, error) {
 		<-batch.done
 
-		var data []*ImageContent
+		var data []ImageContent
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -111,14 +111,14 @@ func (l *ImageContentLoader) LoadThunk(key int64) func() ([]*ImageContent, error
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *ImageContentLoader) LoadAll(keys []int64) ([][]*ImageContent, []error) {
-	results := make([]func() ([]*ImageContent, error), len(keys))
+func (l *ImageContentLoader) LoadAll(keys []int64) ([][]ImageContent, []error) {
+	results := make([]func() ([]ImageContent, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	imageContents := make([][]*ImageContent, len(keys))
+	imageContents := make([][]ImageContent, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
 		imageContents[i], errors[i] = thunk()
@@ -129,13 +129,13 @@ func (l *ImageContentLoader) LoadAll(keys []int64) ([][]*ImageContent, []error) 
 // LoadAllThunk returns a function that when called will block waiting for a ImageContents.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ImageContentLoader) LoadAllThunk(keys []int64) func() ([][]*ImageContent, []error) {
-	results := make([]func() ([]*ImageContent, error), len(keys))
+func (l *ImageContentLoader) LoadAllThunk(keys []int64) func() ([][]ImageContent, []error) {
+	results := make([]func() ([]ImageContent, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([][]*ImageContent, []error) {
-		imageContents := make([][]*ImageContent, len(keys))
+	return func() ([][]ImageContent, []error) {
+		imageContents := make([][]ImageContent, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
 			imageContents[i], errors[i] = thunk()
@@ -147,13 +147,13 @@ func (l *ImageContentLoader) LoadAllThunk(keys []int64) func() ([][]*ImageConten
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *ImageContentLoader) Prime(key int64, value []*ImageContent) bool {
+func (l *ImageContentLoader) Prime(key int64, value []ImageContent) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
 		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
 		// and end up with the whole cache pointing to the same value.
-		cpy := make([]*ImageContent, len(value))
+		cpy := make([]ImageContent, len(value))
 		copy(cpy, value)
 		l.unsafeSet(key, cpy)
 	}
@@ -168,9 +168,9 @@ func (l *ImageContentLoader) Clear(key int64) {
 	l.mu.Unlock()
 }
 
-func (l *ImageContentLoader) unsafeSet(key int64, value []*ImageContent) {
+func (l *ImageContentLoader) unsafeSet(key int64, value []ImageContent) {
 	if l.cache == nil {
-		l.cache = map[int64][]*ImageContent{}
+		l.cache = map[int64][]ImageContent{}
 	}
 	l.cache[key] = value
 }

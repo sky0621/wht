@@ -2,7 +2,7 @@ package gqlmodel
 
 // テキストコンテンツ
 type TextContent struct {
-	ID string `json:"id"`
+	ID TextContentID `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
 	// テキスト

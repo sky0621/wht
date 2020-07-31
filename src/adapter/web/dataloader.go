@@ -23,14 +23,14 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 			textContentLoader: gqlmodel.NewTextContentLoader(gqlmodel.TextContentLoaderConfig{
 				MaxBatch: 100,
 				Wait:     1 * time.Millisecond,
-				Fetch: func(whtIDs []int64) ([][]*gqlmodel.TextContent, []error) {
+				Fetch: func(whtIDs []int64) ([][]gqlmodel.TextContent, []error) {
 					contentsByID, err := resolver.wht.ReadTextContents(r.Context(), whtIDs)
 					if err != nil {
 						return nil, replicateError(err, len(whtIDs))
 					}
-					results := make([][]*gqlmodel.TextContent, len(whtIDs))
+					results := make([][]gqlmodel.TextContent, len(whtIDs))
 					for i, whtID := range whtIDs {
-						results[i] = gqlmodel.FromTextContent(contentsByID[whtID])
+						results[i] = gqlmodel.FromTextContents(contentsByID[whtID])
 					}
 					return results, nil
 				},

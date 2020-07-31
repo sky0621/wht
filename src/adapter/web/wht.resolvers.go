@@ -5,7 +5,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 // ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
-	id, err := r.wht.CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
+	id, err := r.wht.CreateWht(ctx, gqlmodel.ToWhtForCreate(wht))
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
@@ -28,7 +27,7 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 }
 
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
-	if err := r.wht.CreateTextContents(ctx, recordDate, gqlmodel.ToTextContentForCreate(inputs)); err != nil {
+	if err := r.wht.CreateTextContents(ctx, recordDate, gqlmodel.ToTextContentForCreateSlice(inputs)); err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
@@ -63,30 +62,8 @@ func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInp
 		return nil, err
 	}
 
-	var results []gqlmodel.Wht
-	for _, r := range records {
-		if r.ID == nil || r.RecordDate == util.NilTime {
-			err := errors.New("id or recordDate is nil")
-			fmt.Printf("%#+v", err) // TODO: use custom logger
-			return nil, err
-		}
-		results = append(results, gqlmodel.Wht{
-			ID:         gqlmodel.WhtID(*r.ID),
-			RecordDate: r.RecordDate,
-			Title:      r.Title,
-		})
-	}
-	return results, nil
+	return gqlmodel.FromWhts(records), nil
 }
-
-//func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
-//	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
-//	if err != nil {
-//		fmt.Printf("%#+v", err) // TODO: use custom logger
-//		return nil, err
-//	}
-//	return contents, nil
-//}
 
 func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error) {
 	contents, err := For(ctx).textContentLoader.Load(obj.ID.DBUniqueID())

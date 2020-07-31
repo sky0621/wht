@@ -10,7 +10,7 @@ import (
 // MovieContentLoaderConfig captures the config to create a new MovieContentLoader
 type MovieContentLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int64) ([][]*MovieContent, []error)
+	Fetch func(keys []int64) ([][]MovieContent, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -31,7 +31,7 @@ func NewMovieContentLoader(config MovieContentLoaderConfig) *MovieContentLoader 
 // MovieContentLoader batches and caches requests
 type MovieContentLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int64) ([][]*MovieContent, []error)
+	fetch func(keys []int64) ([][]MovieContent, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -42,7 +42,7 @@ type MovieContentLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int64][]*MovieContent
+	cache map[int64][]MovieContent
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -54,25 +54,25 @@ type MovieContentLoader struct {
 
 type movieContentLoaderBatch struct {
 	keys    []int64
-	data    [][]*MovieContent
+	data    [][]MovieContent
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
 // Load a MovieContent by key, batching and caching will be applied automatically
-func (l *MovieContentLoader) Load(key int64) ([]*MovieContent, error) {
+func (l *MovieContentLoader) Load(key int64) ([]MovieContent, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a MovieContent.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *MovieContentLoader) LoadThunk(key int64) func() ([]*MovieContent, error) {
+func (l *MovieContentLoader) LoadThunk(key int64) func() ([]MovieContent, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() ([]*MovieContent, error) {
+		return func() ([]MovieContent, error) {
 			return it, nil
 		}
 	}
@@ -83,10 +83,10 @@ func (l *MovieContentLoader) LoadThunk(key int64) func() ([]*MovieContent, error
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() ([]*MovieContent, error) {
+	return func() ([]MovieContent, error) {
 		<-batch.done
 
-		var data []*MovieContent
+		var data []MovieContent
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -111,14 +111,14 @@ func (l *MovieContentLoader) LoadThunk(key int64) func() ([]*MovieContent, error
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *MovieContentLoader) LoadAll(keys []int64) ([][]*MovieContent, []error) {
-	results := make([]func() ([]*MovieContent, error), len(keys))
+func (l *MovieContentLoader) LoadAll(keys []int64) ([][]MovieContent, []error) {
+	results := make([]func() ([]MovieContent, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	movieContents := make([][]*MovieContent, len(keys))
+	movieContents := make([][]MovieContent, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
 		movieContents[i], errors[i] = thunk()
@@ -129,13 +129,13 @@ func (l *MovieContentLoader) LoadAll(keys []int64) ([][]*MovieContent, []error) 
 // LoadAllThunk returns a function that when called will block waiting for a MovieContents.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *MovieContentLoader) LoadAllThunk(keys []int64) func() ([][]*MovieContent, []error) {
-	results := make([]func() ([]*MovieContent, error), len(keys))
+func (l *MovieContentLoader) LoadAllThunk(keys []int64) func() ([][]MovieContent, []error) {
+	results := make([]func() ([]MovieContent, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([][]*MovieContent, []error) {
-		movieContents := make([][]*MovieContent, len(keys))
+	return func() ([][]MovieContent, []error) {
+		movieContents := make([][]MovieContent, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
 			movieContents[i], errors[i] = thunk()
@@ -147,13 +147,13 @@ func (l *MovieContentLoader) LoadAllThunk(keys []int64) func() ([][]*MovieConten
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *MovieContentLoader) Prime(key int64, value []*MovieContent) bool {
+func (l *MovieContentLoader) Prime(key int64, value []MovieContent) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
 		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
 		// and end up with the whole cache pointing to the same value.
-		cpy := make([]*MovieContent, len(value))
+		cpy := make([]MovieContent, len(value))
 		copy(cpy, value)
 		l.unsafeSet(key, cpy)
 	}
@@ -168,9 +168,9 @@ func (l *MovieContentLoader) Clear(key int64) {
 	l.mu.Unlock()
 }
 
-func (l *MovieContentLoader) unsafeSet(key int64, value []*MovieContent) {
+func (l *MovieContentLoader) unsafeSet(key int64, value []MovieContent) {
 	if l.cache == nil {
-		l.cache = map[int64][]*MovieContent{}
+		l.cache = map[int64][]MovieContent{}
 	}
 	l.cache[key] = value
 }

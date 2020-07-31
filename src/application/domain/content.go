@@ -2,39 +2,42 @@ package domain
 
 // テキストコンテンツ
 type TextContent struct {
-	ID string `json:"id"`
-	ID int64
+	ID    int64
+	WhtID int64
 	// コンテンツ名
-	Name *string `json:"name"`
+	Name *string
 	// テキスト
-	Text string `json:"text"`
+	Text string
 }
 
 // 画像コンテンツ
 type ImageContent struct {
-	ID string `json:"id"`
+	ID    int64
+	WhtID int64
 	// コンテンツ名
-	Name *string `json:"name"`
+	Name *string
 	// 画像パス
-	Path string `json:"path"`
+	Path string
 }
 
 // 音声コンテンツ
 type VoiceContent struct {
-	ID string `json:"id"`
+	ID    int64
+	WhtID int64
 	// コンテンツ名
-	Name *string `json:"name"`
+	Name *string
 	// 音声パス
-	Path string `json:"path"`
+	Path string
 }
 
 // 動画コンテンツ
 type MovieContent struct {
-	ID string `json:"id"`
+	ID    int64
+	WhtID int64
 	// コンテンツ名
-	Name *string `json:"name"`
+	Name *string
 	// 動画パス
-	Path string `json:"path"`
+	Path string
 }
 
 // TODO: validator.v9

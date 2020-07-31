@@ -50,6 +50,10 @@ models:
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
       - github.com/sky0621/wht/adapter/web/gqlmodel.WhtID
+#      - github.com/sky0621/wht/adapter/web/gqlmodel.TextContentID
+#      - github.com/sky0621/wht/adapter/web/gqlmodel.ImageContentID
+#      - github.com/sky0621/wht/adapter/web/gqlmodel.VoiceContentID
+#      - github.com/sky0621/wht/adapter/web/gqlmodel.MovieContentID
   Int:
     model:
       - github.com/99designs/gqlgen/graphql.Int

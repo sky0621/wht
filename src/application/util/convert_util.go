@@ -1,6 +1,10 @@
 package util
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/volatiletech/null/v8"
+)
 
 func PStr(v string) *string {
 	return &v
@@ -8,4 +12,8 @@ func PStr(v string) *string {
 
 func FromInt64ToPStr(v int64) *string {
 	return PStr(strconv.Itoa(int(v)))
+}
+
+func FromNullStringToPStr(v null.String) *string {
+	return &v.String
 }

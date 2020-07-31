@@ -36,6 +36,10 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 	panic(fmt.Errorf("not implemented"))
 }
 
+func (r *textContentResolver) ID(ctx context.Context, obj *gqlmodel.TextContent) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error) {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -52,7 +56,11 @@ func (r *whtResolver) MovieContents(ctx context.Context, obj *gqlmodel.Wht) ([]g
 	panic(fmt.Errorf("not implemented"))
 }
 
+// TextContent returns web.TextContentResolver implementation.
+func (r *Resolver) TextContent() web.TextContentResolver { return &textContentResolver{r} }
+
 // Wht returns web.WhtResolver implementation.
 func (r *Resolver) Wht() web.WhtResolver { return &whtResolver{r} }
 
+type textContentResolver struct{ *Resolver }
 type whtResolver struct{ *Resolver }

@@ -7,6 +7,6 @@ import (
 )
 
 type Content interface {
-	CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContentForCreate) error
+	CreateTextContents(ctx context.Context, whtID int64, inputs []*domain.TextContentForCreate) error
 	ReadTextContents(ctx context.Context, condition *domain.TextContentCondition) ([]*domain.TextContent, error)
 }

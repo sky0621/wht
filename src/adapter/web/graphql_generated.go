@@ -39,6 +39,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	TextContent() TextContentResolver
 	Wht() WhtResolver
 }
 
@@ -115,6 +116,9 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (gqlmodel.Node, error)
 	FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error)
+}
+type TextContentResolver interface {
+	ID(ctx context.Context, obj *gqlmodel.TextContent) (string, error)
 }
 type WhtResolver interface {
 	TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error)
@@ -1631,13 +1635,13 @@ func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.C
 		Object:   "TextContent",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.TextContent().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3515,16 +3519,25 @@ func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionS
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TextContent")
 		case "id":
-			out.Values[i] = ec._TextContent_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TextContent_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "name":
 			out.Values[i] = ec._TextContent_name(ctx, field, obj)
 		case "text":
 			out.Values[i] = ec._TextContent_text(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
