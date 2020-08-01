@@ -3,8 +3,6 @@ package gqlmodel
 import (
 	"encoding/base64"
 	"fmt"
-	"io"
-	"log"
 	"strconv"
 	"strings"
 
@@ -12,13 +10,6 @@ import (
 )
 
 const sep = ":"
-const (
-	typeNameWht   = "wht"
-	typeNameText  = "text"
-	typeNameImage = "image"
-	typeNameVoice = "voice"
-	typeNameMovie = "movie"
-)
 
 func decodeID(id string) (string, int64, error) {
 	b, err := base64.RawURLEncoding.DecodeString(id)
@@ -35,78 +26,4 @@ func decodeID(id string) (string, int64, error) {
 
 func encodeID(typeName string, dbUniqueID int64) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s%s%d", typeName, sep, dbUniqueID)))
-}
-
-type WhtID int64
-
-// UnmarshalGQL GraphQL -> Domain
-func (id *WhtID) UnmarshalGQL(v interface{}) error {
-	s, ok := v.(string)
-	if !ok {
-		return xerrors.New("not string")
-	}
-	typeName, dbUniqueID, err := decodeID(s)
-	if err != nil {
-		return xerrors.Errorf("failed to decodeID[%s] - typeName:%s: %w", s, typeName, err)
-	}
-	*id = WhtID(dbUniqueID)
-	return nil
-}
-
-// MarshalGQL Domain -> GraphQL
-func (id WhtID) MarshalGQL(w io.Writer) {
-	_, err := io.WriteString(w, strconv.Quote(id.NodeID()))
-	if err != nil {
-		log.Print(err)
-	}
-}
-
-func (id WhtID) NodeID() string {
-	return encodeID(typeNameWht, id.DBUniqueID())
-}
-
-func (id WhtID) DBUniqueID() int64 {
-	return int64(id)
-}
-
-func (id WhtID) DBUniqueIDPtr() *int64 {
-	r := id.DBUniqueID()
-	return &r
-}
-
-type TextContentID int64
-
-// UnmarshalGQL GraphQL -> Domain
-func (id *TextContentID) UnmarshalGQL(v interface{}) error {
-	s, ok := v.(string)
-	if !ok {
-		return xerrors.New("not string")
-	}
-	typeName, dbUniqueID, err := decodeID(s)
-	if err != nil {
-		return xerrors.Errorf("failed to decodeID[%s] - typeName:%s: %w", s, typeName, err)
-	}
-	*id = TextContentID(dbUniqueID)
-	return nil
-}
-
-// MarshalGQL Domain -> GraphQL
-func (id TextContentID) MarshalGQL(w io.Writer) {
-	_, err := io.WriteString(w, strconv.Quote(id.NodeID()))
-	if err != nil {
-		log.Print(err)
-	}
-}
-
-func (id TextContentID) NodeID() string {
-	return encodeID(typeNameText, id.DBUniqueID())
-}
-
-func (id TextContentID) DBUniqueID() int64 {
-	return int64(id)
-}
-
-func (id TextContentID) DBUniqueIDPtr() *int64 {
-	r := id.DBUniqueID()
-	return &r
 }

@@ -2,8 +2,11 @@
 set -euox pipefail
 SCRIPT_DIR=$(dirname $0)
 echo ${SCRIPT_DIR}
-cd ${SCRIPT_DIR} && cd ../src
+cd ${SCRIPT_DIR} && cd ../
 
+go run ./tools/gqlgen/global-object-id-gen/main.go
+
+cd ./src
 rm -f ./adapter/web/dummyresolvers/*.go
 rm -f ./adapter/web/graphql_generated.go
 rm -f ./adapter/web/gqlmodel/graphql_generated.go

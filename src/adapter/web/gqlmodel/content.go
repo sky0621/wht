@@ -11,7 +11,7 @@ type TextContent struct {
 
 // 画像コンテンツ
 type ImageContent struct {
-	ID string `json:"id"`
+	ID ImageContentID `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
 	// 画像パス
@@ -20,7 +20,7 @@ type ImageContent struct {
 
 // 音声コンテンツ
 type VoiceContent struct {
-	ID string `json:"id"`
+	ID VoiceContentID `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
 	// 音声パス
@@ -29,7 +29,7 @@ type VoiceContent struct {
 
 // 動画コンテンツ
 type MovieContent struct {
-	ID string `json:"id"`
+	ID MovieContentID `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
 	// 動画パス

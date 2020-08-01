@@ -39,7 +39,6 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
-	TextContent() TextContentResolver
 	Wht() WhtResolver
 }
 
@@ -116,9 +115,6 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (gqlmodel.Node, error)
 	FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error)
-}
-type TextContentResolver interface {
-	ID(ctx context.Context, obj *gqlmodel.TextContent) (string, error)
 }
 type WhtResolver interface {
 	TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error)
@@ -617,8 +613,16 @@ scalar Date
 
 scalar Upload
 
-# WhtID ... format: urlEncoded("typeName:dbUniqueID")
+# WhtID ... format: urlEncoded("WhtID:dbUniqueID")
 scalar WhtID
+# TextContentID ... format: urlEncoded("TextContentID:dbUniqueID")
+scalar TextContentID
+# ImageContentID ... format: urlEncoded("TextContentID:dbUniqueID")
+scalar ImageContentID
+# VoiceContentID ... format: urlEncoded("TextContentID:dbUniqueID")
+scalar VoiceContentID
+# MovieContentID ... format: urlEncoded("TextContentID:dbUniqueID")
+scalar MovieContentID
 
 directive @hasRole(role: Role!) on FIELD_DEFINITION
 
@@ -873,9 +877,9 @@ func (ec *executionContext) _ImageContent_id(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(gqlmodel.ImageContentID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐImageContentID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.ImageContent) (ret graphql.Marshaler) {
@@ -972,9 +976,9 @@ func (ec *executionContext) _MovieContent_id(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(gqlmodel.MovieContentID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐMovieContentID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MovieContent_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.MovieContent) (ret graphql.Marshaler) {
@@ -1635,13 +1639,13 @@ func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.C
 		Object:   "TextContent",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.TextContent().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1653,9 +1657,9 @@ func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(gqlmodel.TextContentID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐTextContentID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.TextContent) (ret graphql.Marshaler) {
@@ -1752,9 +1756,9 @@ func (ec *executionContext) _VoiceContent_id(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(gqlmodel.VoiceContentID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐVoiceContentID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VoiceContent_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.VoiceContent) (ret graphql.Marshaler) {
@@ -3519,25 +3523,16 @@ func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionS
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TextContent")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._TextContent_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._TextContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._TextContent_name(ctx, field, obj)
 		case "text":
 			out.Values[i] = ec._TextContent_text(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3933,6 +3928,42 @@ func (ec *executionContext) marshalNDate2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐImageContentID(ctx context.Context, v interface{}) (gqlmodel.ImageContentID, error) {
+	var res gqlmodel.ImageContentID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐImageContentID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.ImageContentID) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐMovieContentID(ctx context.Context, v interface{}) (gqlmodel.MovieContentID, error) {
+	var res gqlmodel.MovieContentID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐMovieContentID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.MovieContentID) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐTextContentID(ctx context.Context, v interface{}) (gqlmodel.TextContentID, error) {
+	var res gqlmodel.TextContentID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐTextContentID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.TextContentID) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐVoiceContentID(ctx context.Context, v interface{}) (gqlmodel.VoiceContentID, error) {
+	var res gqlmodel.VoiceContentID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐVoiceContentID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.VoiceContentID) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwhtᚋadapterᚋwebᚋgqlmodelᚐWhtID(ctx context.Context, v interface{}) (gqlmodel.WhtID, error) {
