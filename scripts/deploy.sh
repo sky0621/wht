@@ -37,7 +37,6 @@ gcloud run deploy wht \
   --image gcr.io/${project}/wht:latest \
   --platform managed \
   --project ${project} \
-  --allow-unauthenticated \
   --region asia-northeast1 \
   --set-env-vars WHT_ENV=gcp \
   --add-cloudsql-instances ${db_host} \
@@ -45,3 +44,6 @@ gcloud run deploy wht \
   --set-env-vars WHT_DB_USER=${db_user} \
   --set-env-vars WHT_DB_PASS=${db_pass} \
   --set-env-vars WHT_DB_NAME=${db_name}
+
+# MEMO: use all user access
+#  --allow-unauthenticated \

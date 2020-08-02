@@ -41,7 +41,6 @@ func targetIDPackages() []string {
 
 	var results []string
 	for _, idPkg := range idPackages {
-		fmt.Println(idPkg)
 		if strings.Contains(idPkg, idPackage) {
 			results = append(results, strings.Trim(idPkg, idPackage))
 		}
