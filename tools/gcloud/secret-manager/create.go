@@ -21,7 +21,7 @@ func newCreateCmd() *createCmd {
 }
 
 func (*createCmd) Name() string {
-	return "createCmd"
+	return "create"
 }
 
 func (*createCmd) Synopsis() string {

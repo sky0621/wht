@@ -15,7 +15,7 @@ func newListCmd() *listCmd {
 }
 
 func (*listCmd) Name() string {
-	return "listCmd"
+	return "list"
 }
 
 func (*listCmd) Synopsis() string {
