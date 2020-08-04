@@ -3,35 +3,40 @@ set -euox pipefail
 SCRIPT_DIR=$(dirname $0)
 echo ${SCRIPT_DIR}
 
-project=${1:-}
+project=$(gcloud secrets versions access latest --secret="project-id")
 if [[ -z "${project}" ]]; then
   echo -n "need project"
   exit 1
 fi
+echo ${project}
 
-db_user=${2:-}
+db_user=$(gcloud secrets versions access latest --secret="db-user")
 if [[ -z "${db_user}" ]]; then
   echo -n "need db_user"
   exit 1
 fi
+echo ${db_user}
 
-db_pass=${3:-}
+db_pass=$(gcloud secrets versions access latest --secret="db-pass")
 if [[ -z "${db_pass}" ]]; then
   echo -n "need db_pass"
   exit 1
 fi
+echo ${db_pass}
 
-db_name=${4:-}
+db_name=$(gcloud secrets versions access latest --secret="db-name")
 if [[ -z "${db_name}" ]]; then
   echo -n "need db_name"
   exit 1
 fi
+echo ${db_name}
 
-db_host=${5:-}
+db_host=$(gcloud secrets versions access latest --secret="db-host")
 if [[ -z "${db_host}" ]]; then
   echo -n "need db_host"
   exit 1
 fi
+echo ${db_host}
 
 gcloud run deploy wht \
   --image gcr.io/${project}/wht:latest \
@@ -39,6 +44,7 @@ gcloud run deploy wht \
   --project ${project} \
   --region asia-northeast1 \
   --set-env-vars WHT_ENV=gcp \
+  --allow-unauthenticated \
   --add-cloudsql-instances ${db_host} \
   --set-env-vars WHT_DB_HOST=${db_host} \
   --set-env-vars WHT_DB_USER=${db_user} \
