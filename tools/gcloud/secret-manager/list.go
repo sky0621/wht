@@ -69,10 +69,11 @@ func (cmd *listCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 
 		names := strings.Split(resp.Name, "/")
+		reqName := fmt.Sprintf("projects/%s/secrets/%s/versions/%s", names[1], names[3], "1")
 
 		// Build the request.
 		req := &secretmanagerpb.AccessSecretVersionRequest{
-			Name: names[len(names)-1],
+			Name: reqName,
 		}
 
 		// Call the API.
