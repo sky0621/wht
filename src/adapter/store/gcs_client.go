@@ -12,17 +12,27 @@ import (
 )
 
 type CloudStorageClient interface {
-	ExecSignedURL(object string, expire time.Time) (url string, err error)
-	ExecUploadObject(ctx context.Context, object string, reader io.Reader) error
+	ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Time) (url string, err error)
+	ExecUploadObject(ctx context.Context, bucketPurpose BucketPurpose, object string, reader io.Reader) error
 }
 
+// GCSバケットの使用目的
+type BucketPurpose int
+
+const (
+	// 未定義
+	BucketPurposeUndefined = iota // 異常扱いと同義なので +1 しない。
+	// 画像コンテンツ置き場
+	ImageContentsBucket
+)
+
 type cloudStorageClient struct {
-	bucket           string
+	bucketNameMap    map[BucketPurpose]string
 	signedURLFunc    SignedURLFunc
 	uploadObjectFunc UploadObjectFunc
 }
 
-func NewCloudStorageClient(ctx context.Context, bucket string) (CloudStorageClient, error) {
+func NewCloudStorageClient(ctx context.Context, bucketNameMap map[BucketPurpose]string) (CloudStorageClient, error) {
 	var credentialJSON []byte
 	{
 		credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)
@@ -35,22 +45,26 @@ func NewCloudStorageClient(ctx context.Context, bucket string) (CloudStorageClie
 		credentialJSON = credential.JSON
 	}
 
-	conf, err := google.JWTConfigFromJSON(credentialJSON, storage.ScopeReadOnly)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to google.JWTConfigFromJSON: %w", err)
-	}
-	if conf == nil {
-		return nil, xerrors.New("config is nil")
+	var options storage.SignedURLOptions
+	{
+		conf, err := google.JWTConfigFromJSON(credentialJSON, storage.ScopeReadOnly)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to google.JWTConfigFromJSON: %w", err)
+		}
+		if conf == nil {
+			return nil, xerrors.New("config is nil")
+		}
+
+		options = storage.SignedURLOptions{
+			GoogleAccessID: conf.Email,
+			PrivateKey:     conf.PrivateKey,
+			Method:         http.MethodGet,
+		}
 	}
 
-	var options = storage.SignedURLOptions{
-		GoogleAccessID: conf.Email,
-		PrivateKey:     conf.PrivateKey,
-		Method:         http.MethodGet,
-	}
 	return &cloudStorageClient{
-		bucket: bucket,
-		signedURLFunc: func(bucket, object string, expire time.Time) (string, error) {
+		bucketNameMap: bucketNameMap,
+		signedURLFunc: func(ctx context.Context, bucket, object string, expire time.Time) (string, error) {
 			options.Expires = expire
 			url, err := storage.SignedURL(bucket, object, &options)
 			if err != nil {
@@ -80,19 +94,19 @@ func NewCloudStorageClient(ctx context.Context, bucket string) (CloudStorageClie
 	}, nil
 }
 
-func (c *cloudStorageClient) ExecSignedURL(object string, expire time.Time) (string, error) {
+func (c *cloudStorageClient) ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Time) (string, error) {
 	if c == nil || object == "" {
 		return "", xerrors.Errorf("does not meet the preconditions: [object:%s]", object)
 	}
-	return c.signedURLFunc(c.bucket, object, expire)
+	return c.signedURLFunc(ctx, c.bucketNameMap[bucketPurpose], object, expire)
 }
 
-func (c *cloudStorageClient) ExecUploadObject(ctx context.Context, object string, reader io.Reader) error {
+func (c *cloudStorageClient) ExecUploadObject(ctx context.Context, bucketPurpose BucketPurpose, object string, reader io.Reader) error {
 	if c == nil || object == "" || reader == nil {
 		return xerrors.Errorf("does not meet the preconditions: [object:%s]", object)
 	}
-	return c.uploadObjectFunc(ctx, c.bucket, object, reader)
+	return c.uploadObjectFunc(ctx, c.bucketNameMap[bucketPurpose], object, reader)
 }
 
-type SignedURLFunc func(bucket, object string, expire time.Time) (url string, err error)
+type SignedURLFunc func(ctx context.Context, bucket, object string, expire time.Time) (url string, err error)
 type UploadObjectFunc func(ctx context.Context, bucket, object string, reader io.Reader) error

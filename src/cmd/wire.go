@@ -122,8 +122,9 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	return srv
 }
 
-func setupCloudStorageClient(ctx context.Context, cfg config) store.CloudStorageClient {
-	// FIXME: cfg からバケット名を取得
-	bucketName := ""
-	return store.NewCloudStorageClient(ctx, bucketName)
+func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+	bucketNameMap := map[store.BucketPurpose]string{
+		store.ImageContentsBucket: cfg.ImageContentsBucket,
+	}
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }

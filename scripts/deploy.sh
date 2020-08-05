@@ -49,7 +49,8 @@ gcloud run deploy wht \
   --set-env-vars WHT_DB_HOST=${db_host} \
   --set-env-vars WHT_DB_USER=${db_user} \
   --set-env-vars WHT_DB_PASS=${db_pass} \
-  --set-env-vars WHT_DB_NAME=${db_name}
+  --set-env-vars WHT_DB_NAME=${db_name} \
+  --set-env-vars WHT_IMAGE_CONTENTS_BUCKET="wht_image_contents_bucket"
 
 # MEMO: use all user access
 #  --allow-unauthenticated \

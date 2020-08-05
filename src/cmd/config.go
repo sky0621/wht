@@ -18,7 +18,10 @@ type config struct {
 	DBPass string `split_words:"true" default:"yuckyjuice"`
 
 	// Webサーバ設定用
-	WebPort string `default:"8080"`
+	WebPort string `split_words:"true" default:"8080"`
+
+	// ストレージ設定用
+	ImageContentsBucket string `split_words:"true" default:"image-content-bucket"`
 }
 
 func newConfig() config {

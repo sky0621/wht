@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sky0621/wht/adapter/store"
+
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application/domain"
 	"github.com/sky0621/wht/application/util"
@@ -35,7 +37,16 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 }
 
 func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
+	// FIXME:
+	for _, in := range inputs {
+		if err := r.gcsClient.ExecUploadObject(ctx, store.ImageContentsBucket, in.Image.Filename, in.Image.File); err != nil {
+			fmt.Printf("%#+v", err) // TODO: use custom logger
+			return nil, err
+		}
+	}
+	return &gqlmodel.MutationResponse{
+		ID: nil,
+	}, nil
 }
 
 func (r *mutationResolver) CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {

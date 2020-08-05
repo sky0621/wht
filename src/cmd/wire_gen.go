@@ -17,6 +17,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wht/adapter/rdb"
+	"github.com/sky0621/wht/adapter/store"
 	"github.com/sky0621/wht/adapter/web"
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application/usecase"
@@ -41,7 +42,12 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 	wht := rdb.NewWhtRepository(contextExecutor)
 	content := rdb.NewContentRepository(contextExecutor)
 	usecaseWht := usecase.NewWht(wht, content)
-	resolver := web.NewResolver(usecaseWht)
+	cloudStorageClient, err := setupCloudStorageClient(ctx, cfg)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	resolver := web.NewResolver(usecaseWht, cloudStorageClient)
 	mux := setupRouter(cfg, resolver)
 	mainApp := newApp(mux)
 	return mainApp, func() {
@@ -59,7 +65,12 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 	wht := rdb.NewWhtRepository(contextExecutor)
 	content := rdb.NewContentRepository(contextExecutor)
 	usecaseWht := usecase.NewWht(wht, content)
-	resolver := web.NewResolver(usecaseWht)
+	cloudStorageClient, err := setupLocalCloudStorageClient(ctx, cfg)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	resolver := web.NewResolver(usecaseWht, cloudStorageClient)
 	mux := setupRouter(cfg, resolver)
 	mainApp := newApp(mux)
 	return mainApp, func() {
@@ -150,6 +161,11 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	return srv
 }
 
+func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
+}
+
 // wire_local.go:
 
 func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
@@ -178,4 +194,10 @@ func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 			}
 		}
 	}, nil
+}
+
+func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+
+	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }

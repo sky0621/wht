@@ -57,7 +57,10 @@ func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 	}, nil
 }
 
-func setupLocalCloudStorageClient(ctx context.Context, cfg config) store.CloudStorageClient {
+func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
 	// FIXME: モックを返却
-	return nil
+	bucketNameMap := map[store.BucketPurpose]string{
+		store.ImageContentsBucket: cfg.ImageContentsBucket,
+	}
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }
