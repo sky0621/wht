@@ -21,7 +21,7 @@ go version go1.14.2 linux/amd64
 ### gcloud
 ```
 $ gcloud version
-Google Cloud SDK 302.0.0
+Google Cloud SDK 304.0.0
 ```
 
 ## tool

@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/wht/adapter/store"
 	"github.com/sky0621/wht/adapter/web"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
@@ -22,6 +23,7 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 		appSet,
 		web.NewResolver,
 		setupRouter,
+		setupLocalCloudStorageClient,
 	)
 	return nil, nil, nil
 }
@@ -53,4 +55,9 @@ func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 			}
 		}
 	}, nil
+}
+
+func setupLocalCloudStorageClient(ctx context.Context, cfg config) store.CloudStorageClient {
+	// FIXME: モックを返却
+	return nil
 }

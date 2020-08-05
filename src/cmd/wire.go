@@ -8,6 +8,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/sky0621/wht/adapter/store"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -31,6 +33,7 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 		appSet,
 		web.NewResolver,
 		setupRouter,
+		setupCloudStorageClient,
 	)
 	return nil, nil, nil
 }
@@ -117,4 +120,10 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	})
 
 	return srv
+}
+
+func setupCloudStorageClient(ctx context.Context, cfg config) store.CloudStorageClient {
+	// FIXME: cfg からバケット名を取得
+	bucketName := ""
+	return store.NewCloudStorageClient(ctx, bucketName)
 }
