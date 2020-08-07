@@ -16,6 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/adapter/store"
 	"github.com/sky0621/wht/adapter/web"
@@ -24,7 +25,6 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
-	"log"
 	"time"
 )
 
@@ -35,7 +35,7 @@ import (
 // Injectors from wire.go:
 
 func build(ctx context.Context, cfg config) (*app, func(), error) {
-	contextExecutor, cleanup, err := connectDB(cfg)
+	contextExecutor, cleanup, err := setupRDB(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -58,7 +58,7 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 // Injectors from wire_local.go:
 
 func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
-	contextExecutor, cleanup, err := connectLocalDB(cfg)
+	contextExecutor, cleanup, err := setupLocalRDB(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -80,12 +80,12 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 
 // wire.go:
 
-func connectDB(cfg config) (boil.ContextExecutor, func(), error) {
-	log.Println("connectDB() start...")
+func setupRDB(cfg config) (boil.ContextExecutor, func(), error) {
+	log.Debug().Msg("setupRDB")
 
 	dsn := fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBUser, cfg.DBPass, cfg.DBName)
-	log.Printf("DSN:%s", dsn)
+	log.Info().Msgf("DSN:%s", dsn)
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
@@ -107,13 +107,15 @@ func connectDB(cfg config) (boil.ContextExecutor, func(), error) {
 	return db, func() {
 		if db != nil {
 			if err := db.Close(); err != nil {
-				log.Printf("%+v", err)
+				log.Err(err).Send()
 			}
 		}
 	}, nil
 }
 
 func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
+	log.Debug().Msg("setupRouter___START")
+
 	r := chi.NewRouter()
 
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
@@ -124,6 +126,8 @@ func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
 }
 
 func graphQlServer(resolver *web.Resolver) *handler.Server {
+	log.Debug().Msg("graphQlServer___START")
+
 	cfg := web.Config{Resolvers: resolver}
 
 	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
@@ -149,27 +153,28 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	})
 
 	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
-		log.Println(err)
+		log.Err(err).Send()
 		return graphql.DefaultErrorPresenter(ctx, err)
 	})
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
-		log.Println(err)
-		return fmt.Errorf("util server error! %v", err)
+		return xerrors.Errorf("panic occurred: %w", err)
 	})
 
 	return srv
 }
 
 func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+	log.Debug().Msg("setupCloudStorageClient___START")
+
 	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
 	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }
 
 // wire_local.go:
 
-func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
-	log.Println("connectLocalDB() start...")
+func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
+	log.Debug().Msg("setupLocalRDB___START")
 
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
@@ -186,17 +191,18 @@ func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
 	}
 	boil.SetLocation(loc)
-
+	log.Debug().Msg("setupLocalRDB___END")
 	return db, func() {
 		if db != nil {
 			if err := db.Close(); err != nil {
-				log.Printf("%+v", err)
+				log.Err(err).Send()
 			}
 		}
 	}, nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+	log.Debug().Msg("setupLocalCloudStorageClient___START")
 
 	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
 	return store.NewCloudStorageClient(ctx, bucketNameMap)

@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname $0)
 echo ${SCRIPT_DIR}
 cd ${SCRIPT_DIR} && cd ../
 
-project=${1:-}
+project=$(gcloud secrets versions access latest --secret="project-id")
 if [[ -z "${project}" ]]; then
   echo -n "need project"
   exit 1

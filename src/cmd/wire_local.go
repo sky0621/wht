@@ -5,8 +5,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -19,7 +20,7 @@ import (
 // ローカルマシン上で動かす際の固有設定
 func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 	wire.Build(
-		connectLocalDB,
+		setupLocalRDB,
 		appSet,
 		web.NewResolver,
 		setupRouter,
@@ -28,8 +29,8 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 	return nil, nil, nil
 }
 
-func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
-	log.Println("connectLocalDB() start...")
+func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
+	log.Debug().Msg("setupLocalRDB___START")
 
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
@@ -48,16 +49,19 @@ func connectLocalDB(cfg config) (boil.ContextExecutor, func(), error) {
 	}
 	boil.SetLocation(loc)
 
+	log.Debug().Msg("setupLocalRDB___END")
 	return db, func() {
 		if db != nil {
 			if err := db.Close(); err != nil {
-				log.Printf("%+v", err)
+				log.Err(err).Send()
 			}
 		}
 	}, nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+	log.Debug().Msg("setupLocalCloudStorageClient___START")
+
 	// FIXME: モックを返却
 	bucketNameMap := map[store.BucketPurpose]string{
 		store.ImageContentsBucket: cfg.ImageContentsBucket,

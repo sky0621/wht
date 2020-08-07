@@ -48,9 +48,9 @@ func execMain() int {
 
 func buildApp(ctx context.Context, cfg config) (*app, func(), error) {
 	if cfg.IsLocal() {
-		log.Println("on Local...")
+		globalLocalLogSetting()
 		return buildLocal(ctx, cfg)
 	}
-	log.Println("on GCP...")
+	globalLogSetting()
 	return build(ctx, cfg)
 }
