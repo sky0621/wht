@@ -10,7 +10,9 @@ import (
 )
 
 func globalLogSetting() {
-	// FIXME: for GCP logging
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.LevelFieldName = "severity"
+	log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Caller().Logger()
 }
 
 func globalLocalLogSetting() {
@@ -19,5 +21,5 @@ func globalLocalLogSetting() {
 	output.FormatLevel = func(i interface{}) string {
 		return strings.ToUpper(fmt.Sprintf("| %-6s |", i))
 	}
-	log.Logger = zerolog.New(output).With().Timestamp().Logger()
+	log.Logger = zerolog.New(output).With().Timestamp().Caller().Logger()
 }

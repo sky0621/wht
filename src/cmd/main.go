@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -25,7 +25,7 @@ func execMain() int {
 
 	app, shutdownFunc, err := buildApp(context.Background(), cfg)
 	if err != nil {
-		log.Printf("%+v", err)
+		log.Err(err).Msgf("failed to buildApp: %+v", err)
 		return abnormalEnd
 	}
 	defer shutdownFunc()
@@ -40,7 +40,7 @@ func execMain() int {
 
 	log.Printf("wht: listening on port %s", cfg.WebPort)
 	if err := http.ListenAndServe(":"+cfg.WebPort, app.r); err != nil {
-		log.Printf("%+v", err)
+		log.Err(err).Str("WebPort", cfg.WebPort).Msgf("failed to ListenAndServe: %+v", err)
 		return abnormalEnd
 	}
 	return normalEnd

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sky0621/wht/lib"
+
 	"github.com/sky0621/wht/adapter/store"
 
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
@@ -62,6 +64,9 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, recordDate t
 // ------------------------------------------------------------------
 
 func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
+	logger := lib.RequestCtxLogger(ctx)
+	logger.Info().Msg("FindWht___START")
+
 	condition := &domain.WhtCondition{}
 	if c != nil {
 		condition.ID = c.ID.DBUniqueIDPtr()
@@ -69,7 +74,7 @@ func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInp
 
 	records, err := r.wht.ReadWhts(ctx, condition)
 	if err != nil {
-		fmt.Printf("%#+v", err) // TODO: use custom logger
+		logger.Err(err).Msgf("%+v", err)
 		return nil, err
 	}
 

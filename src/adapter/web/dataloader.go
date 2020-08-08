@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 )
 
@@ -26,7 +28,7 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 				Fetch: func(whtIDs []int64) ([][]gqlmodel.TextContent, []error) {
 					contentsByID, err := resolver.wht.ReadTextContents(r.Context(), whtIDs)
 					if err != nil {
-						return nil, replicateError(err, len(whtIDs))
+						return nil, replicateError(xerrors.Errorf("failed to ReadTextContents(%v): %w", whtIDs, err), len(whtIDs))
 					}
 					results := make([][]gqlmodel.TextContent, len(whtIDs))
 					for i, whtID := range whtIDs {

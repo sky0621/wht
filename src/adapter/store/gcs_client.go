@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/xerrors"
 )
@@ -33,6 +34,8 @@ type cloudStorageClient struct {
 }
 
 func NewCloudStorageClient(ctx context.Context, bucketNameMap map[BucketPurpose]string) (CloudStorageClient, error) {
+	log.Debug().Msg("NewCloudStorageClient___START")
+
 	var credentialJSON []byte
 	{
 		credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)

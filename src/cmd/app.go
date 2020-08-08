@@ -1,13 +1,10 @@
 package main
 
 import (
-	"github.com/sky0621/wht/adapter/rdb"
-
-	"github.com/sky0621/wht/application/usecase"
-
-	"github.com/google/wire"
-
 	"github.com/go-chi/chi"
+	"github.com/google/wire"
+	"github.com/sky0621/wht/adapter/rdb"
+	"github.com/sky0621/wht/application/usecase"
 )
 
 func init() {

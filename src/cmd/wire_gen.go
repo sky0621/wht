@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/rdb"
@@ -118,6 +119,10 @@ func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(requestCtxLogger())
+
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
@@ -153,7 +158,7 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	})
 
 	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
-		log.Err(err).Send()
+		log.Err(err).Msgf("failed to graphQL service: %+v", err)
 		return graphql.DefaultErrorPresenter(ctx, err)
 	})
 

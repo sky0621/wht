@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sky0621/wht/lib"
+
 	"github.com/sky0621/wht/application/domain"
 	"github.com/sky0621/wht/application/repository"
 	"golang.org/x/xerrors"
@@ -76,6 +78,8 @@ func (w wht) CreateTextContents(ctx context.Context, recordDate time.Time, input
 }
 
 func (w wht) ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
+	logger := lib.RequestCtxLogger(ctx)
+	logger.Info().Msg("ReadWhts___START")
 	return w.whtRepo.Read(ctx, condition)
 }
 

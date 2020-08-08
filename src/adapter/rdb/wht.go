@@ -3,6 +3,8 @@ package rdb
 import (
 	"context"
 
+	"github.com/sky0621/wht/lib"
+
 	"github.com/sky0621/wht/application/repository"
 
 	"github.com/sky0621/wht/adapter/rdb/boiled"
@@ -33,6 +35,9 @@ func (r *wht) Create(ctx context.Context, in *domain.WhtForCreate) (int64, error
 }
 
 func (r *wht) Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
+	logger := lib.RequestCtxLogger(ctx)
+	logger.Info().Msg("Read___START")
+
 	var mods []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
