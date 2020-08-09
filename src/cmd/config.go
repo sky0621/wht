@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/kelseyhightower/envconfig"
@@ -22,6 +23,9 @@ type config struct {
 
 	// ストレージ設定用
 	ImageContentsBucket string `split_words:"true" default:"image-content-bucket"`
+
+	// GCPサービスアクセス用クレデンシャルJSONの中身（Cloud Run実行アカウントでアクセス不可なサービス利用時用）
+	AppCredentials string `split_words:"true" default:"{}"`
 }
 
 func newConfig() config {
@@ -31,6 +35,11 @@ func newConfig() config {
 	}
 	log.Printf("config:%#+v", c)
 	return c
+}
+
+func (c *config) String() string {
+	return fmt.Sprintf("[CONFIG] (WHT_ENV=%s), (WHT_DB_HOST=%s), (WHT_DB_PORT=%s), (WHT_DB_USER=%s), (WHT_DB_PASS=%s), (WHT_WEB_PORT=%s), (WHT_IMAGE_CONTENTS_BUCKET=%s)",
+		c.Env, c.DBHost, c.DBPort, c.DBUser, c.DBPass, c.WebPort, c.ImageContentsBucket)
 }
 
 func (c *config) IsLocal() bool {

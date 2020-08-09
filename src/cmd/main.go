@@ -30,6 +30,8 @@ func execMain() int {
 	}
 	defer shutdownFunc()
 
+	log.Info().Msg(cfg.String())
+
 	go func() {
 		q := make(chan os.Signal, 1)
 		signal.Notify(q, os.Interrupt, syscall.SIGTERM)

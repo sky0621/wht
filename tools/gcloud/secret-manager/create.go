@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
@@ -13,7 +14,7 @@ import (
 )
 
 type createCmd struct {
-	projectID, key, value string
+	projectID, key, value, path string
 }
 
 func newCreateCmd() *createCmd {
@@ -36,11 +37,12 @@ func (cmd *createCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.projectID, "p", "", "project id")
 	f.StringVar(&cmd.key, "k", "", "key")
 	f.StringVar(&cmd.value, "v", "", "value")
+	f.StringVar(&cmd.path, "f", "", "file path")
 }
 
 func (cmd *createCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	if cmd.projectID == "" || cmd.key == "" || cmd.value == "" {
-		log.Println("need -p [gcp project id] -k [secret key] -v [secret value]")
+	if cmd.projectID == "" || cmd.key == "" || (cmd.value == "" && cmd.path == "") {
+		log.Println("need -p [gcp project id] -k [secret key] -v [secret value] or -f [secret file path]")
 		return subcommands.ExitFailure
 	}
 
@@ -76,7 +78,20 @@ func (cmd *createCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 	}
 
 	// Declare the payload to store.
-	payload := []byte(cmd.value)
+	var payload []byte
+	if cmd.value != "" {
+		payload = []byte(cmd.value)
+	}
+	if cmd.path != "" {
+		ba, err := ioutil.ReadFile(cmd.path)
+		if err != nil {
+			log.Fatalf("failed to read secret file: %+v", err)
+		}
+		payload = ba
+	}
+	if payload == nil {
+		log.Fatal("payload is nil")
+	}
 
 	// Build the request.
 	addSecretVersionReq := &secretmanagerpb.AddSecretVersionRequest{

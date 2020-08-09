@@ -65,5 +65,5 @@ func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudS
 	bucketNameMap := map[store.BucketPurpose]string{
 		store.ImageContentsBucket: cfg.ImageContentsBucket,
 	}
-	return store.NewCloudStorageClient(ctx, bucketNameMap)
+	return store.NewCloudStorageClient(ctx, bucketNameMap, "")
 }
