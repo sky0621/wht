@@ -23,9 +23,6 @@ type config struct {
 
 	// ストレージ設定用
 	ImageContentsBucket string `split_words:"true" default:"image-content-bucket"`
-
-	// GCPサービスアクセス用クレデンシャルJSONの中身（Cloud Run実行アカウントでアクセス不可なサービス利用時用）
-	AppCredentials string `split_words:"true" default:"{}"`
 }
 
 func newConfig() config {

@@ -166,7 +166,7 @@ func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorag
 	log.Debug().Msg("setupCloudStorageClient___START")
 
 	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
-	return store.NewCloudStorageClient(ctx, bucketNameMap, cfg.AppCredentials)
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }
 
 // wire_local.go:
@@ -203,5 +203,5 @@ func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudS
 	log.Debug().Msg("setupLocalCloudStorageClient___START")
 
 	bucketNameMap := map[store.BucketPurpose]string{store.ImageContentsBucket: cfg.ImageContentsBucket}
-	return store.NewCloudStorageClient(ctx, bucketNameMap, "")
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }

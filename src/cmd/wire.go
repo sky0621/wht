@@ -135,5 +135,5 @@ func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorag
 	bucketNameMap := map[store.BucketPurpose]string{
 		store.ImageContentsBucket: cfg.ImageContentsBucket,
 	}
-	return store.NewCloudStorageClient(ctx, bucketNameMap, cfg.AppCredentials)
+	return store.NewCloudStorageClient(ctx, bucketNameMap)
 }

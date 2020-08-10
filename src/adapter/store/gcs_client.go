@@ -33,24 +33,22 @@ type cloudStorageClient struct {
 	uploadObjectFunc UploadObjectFunc
 }
 
-func NewCloudStorageClient(ctx context.Context, bucketNameMap map[BucketPurpose]string, appCredentials string) (CloudStorageClient, error) {
+func NewCloudStorageClient(ctx context.Context, bucketNameMap map[BucketPurpose]string) (CloudStorageClient, error) {
 	log.Debug().Msg("NewCloudStorageClient___START")
 
 	var credentialJSON []byte
 	{
-		if appCredentials == "" {
-			credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)
-			if err != nil {
-				return nil, xerrors.Errorf("failed to google.FindDefaultCredentials: %w", err)
-			}
-			if credential == nil || credential.JSON == nil {
-				return nil, xerrors.New("defaultCredentials is nil")
-			}
-			credentialJSON = credential.JSON
-		} else {
-			credentialJSON = []byte(appCredentials)
+		log.Debug().Msg("cfg.appCredentials is blank")
+		credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to google.FindDefaultCredentials: %w", err)
 		}
+		if credential == nil || credential.JSON == nil {
+			return nil, xerrors.New("defaultCredentials is nil")
+		}
+		credentialJSON = credential.JSON
 	}
+	log.Debug().Msgf("credentialJSON: %s", string(credentialJSON))
 
 	var options storage.SignedURLOptions
 	{
