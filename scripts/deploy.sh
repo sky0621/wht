@@ -38,12 +38,6 @@ if [[ -z "${db_name}" ]]; then
 fi
 echo ${db_name}
 
-app_credential=$(gcloud secrets versions access latest --secret="app-credential")
-if [[ -z "${app_credential}" ]]; then
-  echo -n "need app-credential"
-  exit 1
-fi
-
 gcloud run deploy wht \
   --image gcr.io/${project}/wht:latest \
   --platform managed \
@@ -56,8 +50,7 @@ gcloud run deploy wht \
   --set-env-vars WHT_DB_USER=${db_user} \
   --set-env-vars WHT_DB_PASS=${db_pass} \
   --set-env-vars WHT_DB_NAME=${db_name} \
-  --set-env-vars WHT_IMAGE_CONTENTS_BUCKET="wht_image_contents_bucket" \
-  --set-env-vars WHT_APP_CREDENTIALS="${app_credential}"
+  --set-env-vars WHT_IMAGE_CONTENTS_BUCKET="wht_image_contents_bucket"
 
 # MEMO: use all user access
 #  --allow-unauthenticated \

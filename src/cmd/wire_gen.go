@@ -98,13 +98,6 @@ func setupRDB(cfg config) (boil.ContextExecutor, func(), error) {
 	}
 	boil.DebugMode = true
 
-	var loc *time.Location
-	loc, err = time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
-	}
-	boil.SetLocation(loc)
-
 	return db, func() {
 		if db != nil {
 			if err := db.Close(); err != nil {

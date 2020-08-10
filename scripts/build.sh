@@ -10,4 +10,15 @@ if [[ -z "${project}" ]]; then
   exit 1
 fi
 
+(
+  cd ${SCRIPT_DIR}
+  ./kms.sh dec
+)
+
+sed -i -e 's/app-credential.json/#app-credential.json/' .gitignore
+
 gcloud builds submit --tag gcr.io/${project}/wht:latest .
+
+sed -i -e 's/#app-credential.json/app-credential.json/' .gitignore
+
+rm app-credential.json

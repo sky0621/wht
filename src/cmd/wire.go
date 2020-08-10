@@ -5,7 +5,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -57,12 +56,13 @@ func setupRDB(cfg config) (boil.ContextExecutor, func(), error) {
 	// FIXME: 本番はNG?
 	boil.DebugMode = true
 
-	var loc *time.Location
-	loc, err = time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
-	}
-	boil.SetLocation(loc)
+	// FIXME: Cloud Run でエラー(failed to time.LoadLocation: unknown time zone Asia/Tokyo)
+	//var loc *time.Location
+	//loc, err = time.LoadLocation("Asia/Tokyo")
+	//if err != nil {
+	//	return nil, nil, xerrors.Errorf("failed to time.LoadLocation: %w", err)
+	//}
+	//boil.SetLocation(loc)
 
 	return db, func() {
 		if db != nil {
