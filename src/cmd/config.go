@@ -23,6 +23,9 @@ type config struct {
 
 	// ストレージ設定用
 	ImageContentsBucket string `split_words:"true" default:"image-content-bucket"`
+
+	// トレース設定用
+	Trace bool `split_words:"true" default:"false"`
 }
 
 func newConfig() config {
@@ -35,8 +38,8 @@ func newConfig() config {
 }
 
 func (c *config) String() string {
-	return fmt.Sprintf("[CONFIG] (WHT_ENV=%s), (WHT_DB_HOST=%s), (WHT_DB_PORT=%s), (WHT_DB_USER=%s), (WHT_DB_PASS=%s), (WHT_WEB_PORT=%s), (WHT_IMAGE_CONTENTS_BUCKET=%s)",
-		c.Env, c.DBHost, c.DBPort, c.DBUser, c.DBPass, c.WebPort, c.ImageContentsBucket)
+	return fmt.Sprintf("[CONFIG] (WHT_ENV=%s), (WHT_DB_HOST=%s), (WHT_DB_PORT=%s), (WHT_DB_USER=%s), (WHT_DB_PASS=%s), (WHT_WEB_PORT=%s), (WHT_IMAGE_CONTENTS_BUCKET=%s), (WHT_TRACE=%v)",
+		c.Env, c.DBHost, c.DBPort, c.DBUser, c.DBPass, c.WebPort, c.ImageContentsBucket, c.Trace)
 }
 
 func (c *config) IsLocal() bool {

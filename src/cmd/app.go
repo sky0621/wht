@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/go-chi/chi"
 	"github.com/google/wire"
 	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/application/usecase"
+	"gocloud.dev/server"
 )
 
 func init() {
@@ -18,11 +18,11 @@ var appSet = wire.NewSet(
 )
 
 type app struct {
-	r *chi.Mux
+	s *server.Server
 }
 
-func newApp(r *chi.Mux) *app {
-	return &app{r: r}
+func newApp(s *server.Server) *app {
+	return &app{s: s}
 }
 
 var usecaseHandler = wire.NewSet(

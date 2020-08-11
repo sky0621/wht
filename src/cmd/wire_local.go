@@ -5,14 +5,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/store"
 	"github.com/sky0621/wht/adapter/web"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"gocloud.dev/server"
 	"golang.org/x/xerrors"
 )
 
@@ -22,7 +25,7 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 		setupLocalRDB,
 		appSet,
 		web.NewResolver,
-		setupRouter,
+		setupLocalServer,
 		setupLocalCloudStorageClient,
 	)
 	return nil, nil, nil
@@ -56,6 +59,18 @@ func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
 			}
 		}
 	}, nil
+}
+
+func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
+	log.Debug().Msg("setupLocalServer___START")
+
+	mux := http.NewServeMux()
+
+	// FIXME: 本番はNG
+	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(mux, nil), nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {

@@ -4,7 +4,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"sync"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -12,8 +16,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -22,6 +24,11 @@ import (
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"go.opencensus.io/trace"
+	"gocloud.dev/gcp"
+	"gocloud.dev/server"
+	"gocloud.dev/server/health"
+	"gocloud.dev/server/sdserver"
 	"golang.org/x/xerrors"
 )
 
@@ -31,7 +38,7 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 		setupRDB,
 		appSet,
 		web.NewResolver,
-		setupRouter,
+		setupServer,
 		setupCloudStorageClient,
 	)
 	return nil, nil, nil
@@ -73,21 +80,83 @@ func setupRDB(cfg config) (boil.ContextExecutor, func(), error) {
 	}, nil
 }
 
-func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
-	log.Debug().Msg("setupRouter___START")
+type GlobalMonitoredResource struct {
+	projectID string
+}
 
-	r := chi.NewRouter()
+func (g GlobalMonitoredResource) MonitoredResource() (string, map[string]string) {
+	return "global", map[string]string{"project_id": g.projectID}
+}
 
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(requestCtxLogger())
+type customHealthCheck struct {
+	mu      sync.RWMutex
+	healthy bool
+}
+
+func (h *customHealthCheck) CheckHealth() error {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if !h.healthy {
+		return errors.New("not ready yet")
+	}
+	return nil
+}
+
+func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
+	log.Debug().Msg("setupServer___START")
+
+	credentials, err := gcp.DefaultCredentials(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to DefaultCredentials: %w", err)
+	}
+
+	tokenSource := gcp.CredentialsTokenSource(credentials)
+
+	var projectID gcp.ProjectID
+	{
+		var err error
+		projectID, err = gcp.DefaultProjectID(credentials)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to DefaultProjectID: %w", err)
+		}
+	}
+
+	var exporter trace.Exporter
+	if cfg.Trace {
+		fmt.Println("Exporting traces to Stackdriver")
+		mr := GlobalMonitoredResource{projectID: string(projectID)}
+		exporter, _, err = sdserver.NewExporter(projectID, tokenSource, mr)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to NewExporter: %w", err)
+		}
+	}
+
+	mux := http.NewServeMux()
 
 	// FIXME: 本番はNG
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	healthCheck := new(customHealthCheck)
+	time.AfterFunc(10*time.Second, func() {
+		healthCheck.mu.Lock()
+		defer healthCheck.mu.Unlock()
+		healthCheck.healthy = true
+	})
 
-	return r
+	options := &server.Options{
+		RequestLogger: sdserver.NewRequestLogger(),
+		HealthChecks:  []health.Checker{healthCheck},
+		TraceExporter: exporter,
+
+		// In production you will likely want to use trace.ProbabilitySampler
+		// instead, since AlwaysSample will start and export a trace for every
+		// request - this may be prohibitively slow with significant traffic.
+		DefaultSamplingPolicy: trace.AlwaysSample(),
+		Driver:                &server.DefaultDriver{},
+	}
+
+	return server.New(mux, options), nil
 }
 
 func graphQlServer(resolver *web.Resolver) *handler.Server {

@@ -13,10 +13,7 @@ RUN go mod download
 
 # Copy local code to the container image.
 COPY ./src/ ./
-
 COPY ./app-credential.json ./
-RUN pwd
-RUN ls -la
 
 WORKDIR cmd
 
@@ -31,11 +28,7 @@ FROM alpine:latest
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/cmd/server /server
 COPY --from=builder /app/app-credential.json /app-credential.json
-RUN pwd
-RUN ls -la
 ENV GOOGLE_APPLICATION_CREDENTIALS /app-credential.json
-RUN env
-RUN cat /app-credential.json
 
 # Run the web application on container startup.
 CMD ["/server"]

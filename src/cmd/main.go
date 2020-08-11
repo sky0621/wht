@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -41,7 +40,7 @@ func execMain() int {
 	}()
 
 	log.Printf("wht: listening on port %s", cfg.WebPort)
-	if err := http.ListenAndServe(":"+cfg.WebPort, app.r); err != nil {
+	if err := app.s.ListenAndServe(":" + cfg.WebPort); err != nil {
 		log.Err(err).Str("WebPort", cfg.WebPort).Msgf("failed to ListenAndServe: %+v", err)
 		return abnormalEnd
 	}

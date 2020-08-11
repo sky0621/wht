@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -14,8 +15,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/rdb"
@@ -25,7 +24,14 @@ import (
 	"github.com/sky0621/wht/application/usecase"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"go.opencensus.io/trace"
+	"gocloud.dev/gcp"
+	"gocloud.dev/server"
+	"gocloud.dev/server/health"
+	"gocloud.dev/server/sdserver"
 	"golang.org/x/xerrors"
+	"net/http"
+	"sync"
 	"time"
 )
 
@@ -49,8 +55,12 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 		return nil, nil, err
 	}
 	resolver := web.NewResolver(usecaseWht, cloudStorageClient)
-	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(mux)
+	server, err := setupServer(ctx, cfg, resolver)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	mainApp := newApp(server)
 	return mainApp, func() {
 		cleanup()
 	}, nil
@@ -72,8 +82,12 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 		return nil, nil, err
 	}
 	resolver := web.NewResolver(usecaseWht, cloudStorageClient)
-	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(mux)
+	server, err := setupLocalServer(ctx, cfg, resolver)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	mainApp := newApp(server)
 	return mainApp, func() {
 		cleanup()
 	}, nil
@@ -107,20 +121,79 @@ func setupRDB(cfg config) (boil.ContextExecutor, func(), error) {
 	}, nil
 }
 
-func setupRouter(cfg config, resolver *web.Resolver) *chi.Mux {
-	log.Debug().Msg("setupRouter___START")
+type GlobalMonitoredResource struct {
+	projectID string
+}
 
-	r := chi.NewRouter()
+func (g GlobalMonitoredResource) MonitoredResource() (string, map[string]string) {
+	return "global", map[string]string{"project_id": g.projectID}
+}
 
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(requestCtxLogger())
+type customHealthCheck struct {
+	mu      sync.RWMutex
+	healthy bool
+}
 
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+func (h *customHealthCheck) CheckHealth() error {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if !h.healthy {
+		return errors.New("not ready yet")
+	}
+	return nil
+}
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
+	log.Debug().Msg("setupServer___START")
 
-	return r
+	credentials, err := gcp.DefaultCredentials(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to DefaultCredentials: %w", err)
+	}
+
+	tokenSource := gcp.CredentialsTokenSource(credentials)
+
+	var projectID gcp.ProjectID
+	{
+		var err error
+		projectID, err = gcp.DefaultProjectID(credentials)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to DefaultProjectID: %w", err)
+		}
+	}
+
+	var exporter trace.Exporter
+	if cfg.Trace {
+		fmt.Println("Exporting traces to Stackdriver")
+		mr := GlobalMonitoredResource{projectID: string(projectID)}
+		exporter, _, err = sdserver.NewExporter(projectID, tokenSource, mr)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to NewExporter: %w", err)
+		}
+	}
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	healthCheck := new(customHealthCheck)
+	time.AfterFunc(10*time.Second, func() {
+		healthCheck.mu.Lock()
+		defer healthCheck.mu.Unlock()
+		healthCheck.healthy = true
+	})
+
+	options := &server.Options{
+		RequestLogger: sdserver.NewRequestLogger(),
+		HealthChecks:  []health.Checker{healthCheck},
+		TraceExporter: exporter,
+
+		DefaultSamplingPolicy: trace.AlwaysSample(),
+		Driver:                &server.DefaultDriver{},
+	}
+
+	return server.New(mux, options), nil
 }
 
 func graphQlServer(resolver *web.Resolver) *handler.Server {
@@ -197,6 +270,17 @@ func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
 			}
 		}
 	}, nil
+}
+
+func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
+	log.Debug().Msg("setupLocalServer___START")
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(mux, nil), nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
