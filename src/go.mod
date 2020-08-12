@@ -8,7 +8,6 @@ require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/friendsofgo/errors v0.9.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/go-chi/chi v3.3.2+incompatible
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/wire v0.4.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect

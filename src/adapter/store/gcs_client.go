@@ -3,17 +3,15 @@ package store
 import (
 	"context"
 	"io"
-	"net/http"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/oauth2/google"
+	"gocloud.dev/blob"
 	"golang.org/x/xerrors"
 )
 
 type CloudStorageClient interface {
-	ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Time) (url string, err error)
+	ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Duration) (url string, err error)
 	ExecUploadObject(ctx context.Context, bucketPurpose BucketPurpose, object string, reader io.Reader) error
 }
 
@@ -36,70 +34,92 @@ type cloudStorageClient struct {
 func NewCloudStorageClient(ctx context.Context, bucketNameMap map[BucketPurpose]string) (CloudStorageClient, error) {
 	log.Debug().Msg("NewCloudStorageClient___START")
 
-	var credentialJSON []byte
-	{
-		log.Debug().Msg("cfg.appCredentials is blank")
-		credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to google.FindDefaultCredentials: %w", err)
-		}
-		if credential == nil || credential.JSON == nil {
-			return nil, xerrors.New("defaultCredentials is nil")
-		}
-		credentialJSON = credential.JSON
-	}
-	log.Debug().Msgf("credentialJSON: %s", string(credentialJSON))
-
-	var options storage.SignedURLOptions
-	{
-		conf, err := google.JWTConfigFromJSON(credentialJSON, storage.ScopeReadOnly)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to google.JWTConfigFromJSON: %w", err)
-		}
-		if conf == nil {
-			return nil, xerrors.New("config is nil")
-		}
-
-		options = storage.SignedURLOptions{
-			GoogleAccessID: conf.Email,
-			PrivateKey:     conf.PrivateKey,
-			Method:         http.MethodGet,
-		}
-	}
+	//var credentialJSON []byte
+	//{
+	//	log.Debug().Msg("cfg.appCredentials is blank")
+	//	credential, err := google.FindDefaultCredentials(ctx, storage.ScopeReadOnly)
+	//	if err != nil {
+	//		return nil, xerrors.Errorf("failed to google.FindDefaultCredentials: %w", err)
+	//	}
+	//	if credential == nil || credential.JSON == nil {
+	//		return nil, xerrors.New("defaultCredentials is nil")
+	//	}
+	//	credentialJSON = credential.JSON
+	//}
+	//log.Debug().Msgf("credentialJSON: %s", string(credentialJSON))
+	//
+	//var options storage.SignedURLOptions
+	//{
+	//	conf, err := google.JWTConfigFromJSON(credentialJSON, storage.ScopeReadOnly)
+	//	if err != nil {
+	//		return nil, xerrors.Errorf("failed to google.JWTConfigFromJSON: %w", err)
+	//	}
+	//	if conf == nil {
+	//		return nil, xerrors.New("config is nil")
+	//	}
+	//
+	//	options = storage.SignedURLOptions{
+	//		GoogleAccessID: conf.Email,
+	//		PrivateKey:     conf.PrivateKey,
+	//		Method:         http.MethodGet,
+	//	}
+	//}
 
 	return &cloudStorageClient{
 		bucketNameMap: bucketNameMap,
-		signedURLFunc: func(ctx context.Context, bucket, object string, expire time.Time) (string, error) {
-			options.Expires = expire
-			url, err := storage.SignedURL(bucket, object, &options)
+		signedURLFunc: func(ctx context.Context, bucket, object string, expire time.Duration) (string, error) {
+			b, cleaner, err := getBucket(ctx, bucket)
 			if err != nil {
-				return "", xerrors.Errorf("failed to storage.SignedURL(bucket:%s, object:%s): %w", bucket, object, err)
+				return "", xerrors.Errorf("Failed to setup bucket: %w", err)
+			}
+			defer cleaner()
+
+			var url string
+			{
+				var err error
+				url, err = b.SignedURL(ctx, object, &blob.SignedURLOptions{
+					Expiry: expire,
+				})
+				if err != nil {
+					return "", xerrors.Errorf("failed to storage.SignedURL(bucket:%s, object:%s): %w", bucket, object, err)
+				}
 			}
 			return url, nil
 		},
 		uploadObjectFunc: func(ctx context.Context, bucket, object string, reader io.Reader) error {
-			client, err := storage.NewClient(ctx)
+			b, cleaner, err := getBucket(ctx, bucket)
 			if err != nil {
-				return xerrors.Errorf("failed to storage.NewClient: %w", err)
+				return xerrors.Errorf("Failed to setup bucket: %w", err)
 			}
-			wc := client.Bucket(bucket).Object(object).NewWriter(ctx)
-			wc.ObjectAttrs.ContentType = "application/octet-stream"
-			wc.ObjectAttrs.CacheControl = "no-cache"
-			if _, err = io.Copy(wc, reader); err != nil {
-				return xerrors.Errorf("failed to storage.NewClient.Bucket(%s).Object(%s).NewWriter: %w", bucket, object, err)
-			}
-			defer func() {
-				if wc == nil {
-					return
+			defer cleaner()
+
+			var writer *blob.Writer
+			{
+				var err error
+				writer, err = b.NewWriter(ctx, object, &blob.WriterOptions{
+					ContentType:  "application/octet-stream",
+					CacheControl: "no-cache",
+				})
+				if err != nil {
+					return xerrors.Errorf("Failed to NewWriter: %w", err)
 				}
-				err = wc.Close()
-			}()
+				defer func() {
+					if err := writer.Close(); err != nil {
+						log.Err(err).Send()
+					}
+				}()
+
+				_, err = writer.ReadFrom(reader)
+				if err != nil {
+					return xerrors.Errorf("Failed to ReadFrom: %w", err)
+				}
+			}
 			return nil
 		},
 	}, nil
 }
 
-func (c *cloudStorageClient) ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Time) (string, error) {
+func (c *cloudStorageClient) ExecSignedURL(ctx context.Context, bucketPurpose BucketPurpose, object string, expire time.Duration) (string, error) {
 	if c == nil || object == "" {
 		return "", xerrors.Errorf("does not meet the preconditions: [object:%s]", object)
 	}
@@ -113,5 +133,17 @@ func (c *cloudStorageClient) ExecUploadObject(ctx context.Context, bucketPurpose
 	return c.uploadObjectFunc(ctx, c.bucketNameMap[bucketPurpose], object, reader)
 }
 
-type SignedURLFunc func(ctx context.Context, bucket, object string, expire time.Time) (url string, err error)
+type SignedURLFunc func(ctx context.Context, bucket, object string, expire time.Duration) (url string, err error)
 type UploadObjectFunc func(ctx context.Context, bucket, object string, reader io.Reader) error
+
+func getBucket(ctx context.Context, bucket string) (*blob.Bucket, func(), error) {
+	b, err := blob.OpenBucket(ctx, bucket)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("Failed to setup bucket: %w", err)
+	}
+	return b, func() {
+		if err := b.Close(); err != nil {
+			log.Err(err).Send()
+		}
+	}, nil
+}
