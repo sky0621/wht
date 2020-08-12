@@ -5,10 +5,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -64,13 +65,18 @@ func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
 func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
 	log.Debug().Msg("setupLocalServer___START")
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(requestCtxLogger())
 
 	// FIXME: 本番はNG
-	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
-	return server.New(mux, nil), nil
+	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(r, nil), nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {

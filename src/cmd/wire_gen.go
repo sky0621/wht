@@ -15,6 +15,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/rdb"
@@ -30,13 +32,13 @@ import (
 	"gocloud.dev/server/health"
 	"gocloud.dev/server/sdserver"
 	"golang.org/x/xerrors"
-	"net/http"
 	"sync"
 	"time"
 )
 
 import (
 	_ "github.com/lib/pq"
+	_ "gocloud.dev/blob/gcsblob"
 )
 
 // Injectors from wire.go:
@@ -172,11 +174,6 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 		}
 	}
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
-
 	healthCheck := new(customHealthCheck)
 	time.AfterFunc(10*time.Second, func() {
 		healthCheck.mu.Lock()
@@ -193,7 +190,17 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 		Driver:                &server.DefaultDriver{},
 	}
 
-	return server.New(mux, options), nil
+	r := chi.NewRouter()
+
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(requestCtxLogger())
+
+	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+
+	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(r, options), nil
 }
 
 func graphQlServer(resolver *web.Resolver) *handler.Server {
@@ -275,12 +282,17 @@ func setupLocalRDB(cfg config) (boil.ContextExecutor, func(), error) {
 func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (*server.Server, error) {
 	log.Debug().Msg("setupLocalServer___START")
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(requestCtxLogger())
 
-	return server.New(mux, nil), nil
+	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+
+	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(r, nil), nil
 }
 
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {

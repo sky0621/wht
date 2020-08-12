@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
 
@@ -16,6 +15,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -131,12 +132,6 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 		}
 	}
 
-	mux := http.NewServeMux()
-
-	// FIXME: 本番はNG
-	mux.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
-
 	healthCheck := new(customHealthCheck)
 	time.AfterFunc(10*time.Second, func() {
 		healthCheck.mu.Lock()
@@ -156,7 +151,18 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 		Driver:                &server.DefaultDriver{},
 	}
 
-	return server.New(mux, options), nil
+	r := chi.NewRouter()
+
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(requestCtxLogger())
+
+	// FIXME: 本番はNG
+	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+
+	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	return server.New(r, options), nil
 }
 
 func graphQlServer(resolver *web.Resolver) *handler.Server {
