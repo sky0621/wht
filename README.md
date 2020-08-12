@@ -24,6 +24,24 @@ $ gcloud version
 Google Cloud SDK 304.0.0
 ```
 
+### yarn
+```
+$ yarn -v
+1.22.4
+```
+
+### node
+```
+$ node -v
+v12.16.1
+```
+
+### npm
+```
+$ npm -v
+6.13.4
+```
+
 ## tool
 ### IDE(goland)
 ```

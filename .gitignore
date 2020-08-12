@@ -17,3 +17,7 @@
 .idea
 
 app-credential.json
+
+view/.nuxt
+view/node_modules
+

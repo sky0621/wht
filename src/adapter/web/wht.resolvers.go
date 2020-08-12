@@ -35,6 +35,7 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
+	// TODO: empty response
 	return &gqlmodel.MutationResponse{}, nil
 }
 
