@@ -77,7 +77,7 @@ func (cmd *createCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 		}
 	}
 
-	// Declare the payload to store.
+	// Declare the payload to storage.
 	var payload []byte
 	if cmd.value != "" {
 		payload = []byte(cmd.value)

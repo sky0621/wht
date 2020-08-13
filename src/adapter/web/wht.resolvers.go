@@ -10,7 +10,7 @@ import (
 
 	"github.com/sky0621/wht/lib"
 
-	"github.com/sky0621/wht/adapter/store"
+	"github.com/sky0621/wht/adapter/storage"
 
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application/domain"
@@ -41,7 +41,7 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
 	// FIXME:
 	for _, in := range inputs {
-		if err := r.gcsClient.ExecUploadObject(ctx, store.ImageContentsBucket, in.Image.Filename, in.Image.File); err != nil {
+		if err := r.gcsClient.ExecUploadObject(ctx, storage.ImageContentsBucket, in.Image.Filename, in.Image.File); err != nil {
 			fmt.Printf("%#+v", err) // TODO: use custom logger
 			return nil, err
 		}

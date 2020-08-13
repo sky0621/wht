@@ -20,7 +20,7 @@ import (
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
-	"github.com/sky0621/wht/adapter/store"
+	"github.com/sky0621/wht/adapter/storage"
 	"github.com/sky0621/wht/adapter/web"
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -204,11 +204,11 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	return srv
 }
 
-func setupCloudStorageClient(ctx context.Context, cfg config) (store.CloudStorageClient, error) {
+func setupCloudStorageClient(ctx context.Context, cfg config) (storage.CloudStorageClient, error) {
 	log.Debug().Msg("setupCloudStorageClient___START")
 
-	bucketNameMap := map[store.BucketPurpose]string{
-		store.ImageContentsBucket: cfg.ImageContentsBucket,
+	bucketNameMap := map[storage.BucketPurpose]string{
+		storage.ImageContentsBucket: cfg.ImageContentsBucket,
 	}
-	return store.NewCloudStorageClient(ctx, bucketNameMap)
+	return storage.NewCloudStorageClient(ctx, bucketNameMap)
 }

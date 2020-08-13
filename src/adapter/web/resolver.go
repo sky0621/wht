@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/sky0621/wht/adapter/store"
+	"github.com/sky0621/wht/adapter/storage"
 	"github.com/sky0621/wht/application/usecase"
 )
 
@@ -12,9 +12,9 @@ import (
 type Resolver struct {
 	wht usecase.Wht
 
-	gcsClient store.CloudStorageClient
+	gcsClient storage.CloudStorageClient
 }
 
-func NewResolver(wht usecase.Wht, gcsClient store.CloudStorageClient) *Resolver {
+func NewResolver(wht usecase.Wht, gcsClient storage.CloudStorageClient) *Resolver {
 	return &Resolver{wht: wht, gcsClient: gcsClient}
 }
