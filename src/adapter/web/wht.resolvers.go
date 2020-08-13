@@ -14,7 +14,6 @@ import (
 
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application/domain"
-	"github.com/sky0621/wht/application/util"
 )
 
 // ------------------------------------------------------------------
@@ -27,7 +26,7 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-	return &gqlmodel.MutationResponse{ID: util.FromInt64ToPStr(id)}, nil
+	return &gqlmodel.MutationResponse{ID: lib.FromInt64ToPStr(id)}, nil
 }
 
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {

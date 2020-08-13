@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sky0621/wht/lib"
+
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/sky0621/wht/application/util"
 	"golang.org/x/xerrors"
 )
 
@@ -19,11 +20,11 @@ func UnmarshalDate(v interface{}) (time.Time, error) {
 	if !ok {
 		return time.Time{}, xerrors.New("not string")
 	}
-	t, err := time.ParseInLocation(dateLayout, s, util.JST)
+	t, err := time.ParseInLocation(dateLayout, s, lib.JST)
 	if err != nil {
 		return time.Time{}, xerrors.Errorf("failed to ParseInLocation: %w", err)
 	}
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, util.JST), nil
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, lib.JST), nil
 }
 
 // MarshalDate Domain -> GraphQL
