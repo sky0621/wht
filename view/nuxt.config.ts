@@ -1,3 +1,4 @@
+// @ts-ignore
 import colors from 'vuetify/es5/util/colors'
 
 export default {
@@ -37,9 +38,7 @@ export default {
    ** Plugins to load before mounting the App
    ** https://nuxtjs.org/guide/plugins
    */
-  plugins: [
-    '@/plugins/composition-api'
-  ],
+  plugins: ['@/plugins/composition-api'],
   /*
    ** Auto import components
    ** See https://nuxtjs.org/api/configuration-components
@@ -48,11 +47,32 @@ export default {
   /*
    ** Nuxt.js dev-modules
    */
-  buildModules: ['@nuxt/typescript-build', '@nuxtjs/vuetify'],
+  buildModules: [
+    '@nuxt/typescript-build',
+    '@nuxtjs/vuetify',
+    '@nuxtjs/dotenv',
+    '@nuxtjs/toast',
+  ],
   /*
    ** Nuxt.js modules
    */
-  modules: [],
+  modules: ['@nuxtjs/apollo', '@nuxtjs/auth'],
+
+  apollo: {
+    clientConfigs: {
+      default: {
+        httpEndpoint: 'http://localhost:8080/query',
+      },
+    },
+    defaultOptions: {
+      $query: {
+        fetchPolicy: 'network-only',
+      },
+    },
+    errorHandler: '~/plugins/apollo-error-handler.ts',
+    // tokenName: 'auth._token.auth0',
+    // authenticationType: '', // default の Bearer だと「Bearer: Bearer」というように重複が起きるため
+  },
   /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module
@@ -74,9 +94,39 @@ export default {
       },
     },
   },
+  // auth: {
+  //   redirect: {
+  //     login: '/login',
+  //     logout: '/login',
+  //     callback: '/callback',
+  //     home: '/'
+  //   },
+  //   strategies: {
+  //     auth0: {
+  //       domain: process.env.AUTH0_DOMAIN,
+  //       client_id: process.env.AUTH0_CLIENT_ID,
+  //       audience: process.env.AUTH0_AUDIENCE
+  //     }
+  //   },
+  //   plugins: ['~/plugins/auth.ts']
+  // },
+  // router: {
+  //   middleware: ['auth']
+  // },
+  toast: {
+    position: 'top-center',
+    duration: 5000,
+  },
   /*
    ** Build configuration
    ** See https://nuxtjs.org/api/configuration-build/
    */
-  build: {},
+  build: {
+    babel: {
+      plugins: [
+        ['@babel/plugin-proposal-decorators', { legacy: true }],
+        ['@babel/plugin-proposal-class-properties', { loose: true }],
+      ],
+    },
+  },
 }
