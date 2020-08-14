@@ -1,5 +1,5 @@
 <template>
-  <div>top</div>
+  <div>wht</div>
 </template>
 
 <script lang="ts"></script>
