@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-system-bar><v-icon>mdi-gmail</v-icon></v-system-bar>
+    <v-system-bar fixed app><v-icon>mdi-gmail</v-icon></v-system-bar>
     <v-app-bar fixed app>
       <v-app-bar-nav-icon
         @click.stop="attributes.drawer = !attributes.drawer"
@@ -28,7 +28,9 @@
       </v-list>
     </v-navigation-drawer>
     <v-main>
-      <nuxt />
+      <v-container>
+        <nuxt />
+      </v-container>
     </v-main>
     <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
