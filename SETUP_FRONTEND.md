@@ -73,3 +73,15 @@ Done in 10.71s.
 Done in 186.20s.
 ```
 
+## add module
+
+```
+$ yarn add @nuxtjs/apollo @nuxtjs/auth @nuxtjs/proxy @nuxtjs/toast @types/lodash graphql-tag nuxt-i18n nuxt-property-decorator vuex-persistedstate typesync
+```
+
+```
+$ yarn add --dev @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations lint-staged vee-validate
+```
+
+## setup module
+
