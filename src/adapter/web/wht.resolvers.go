@@ -91,7 +91,12 @@ func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gq
 }
 
 func (r *whtResolver) ImageContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.ImageContent, error) {
-	panic(fmt.Errorf("not implemented"))
+	contents, err := For(ctx).imageContentLoader.Load(obj.ID.DBUniqueID())
+	if err != nil {
+		fmt.Printf("%#+v", err) // TODO: use custom logger
+		return nil, err
+	}
+	return contents, nil
 }
 
 func (r *whtResolver) VoiceContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.VoiceContent, error) {

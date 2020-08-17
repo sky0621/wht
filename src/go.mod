@@ -3,12 +3,12 @@ module github.com/sky0621/wht
 go 1.14
 
 require (
-	cloud.google.com/go/storage v1.9.0
 	github.com/99designs/gqlgen v0.11.3
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/friendsofgo/errors v0.9.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-chi/chi v3.3.2+incompatible
+	github.com/go-chi/cors v1.1.1
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/wire v0.4.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -30,7 +30,6 @@ require (
 	github.com/volatiletech/strmangle v0.0.1
 	go.opencensus.io v0.22.3
 	gocloud.dev v0.20.0
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543

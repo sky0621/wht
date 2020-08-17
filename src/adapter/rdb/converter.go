@@ -21,3 +21,15 @@ func ToTextContent(from *boiled.ContentText) *domain.TextContent {
 		Text:  from.Text,
 	}
 }
+
+func ToImageContent(from *boiled.ContentImage) *domain.ImageContent {
+	if from == nil {
+		return nil
+	}
+	return &domain.ImageContent{
+		ID:    from.ID,
+		WhtID: from.WHTID,
+		Name:  lib.FromNullStringToPStr(from.Name),
+		Path:  from.Path,
+	}
+}

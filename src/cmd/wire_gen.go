@@ -17,6 +17,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/rdb"
@@ -287,6 +288,17 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
+
+	r.Use(cors.Handler(cors.Options{
+
+		AllowedOrigins: []string{"*"},
+
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 

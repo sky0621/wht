@@ -37,7 +37,7 @@ func (r *content) CreateTextContents(ctx context.Context, whtID int64, inputs []
 	return nil
 }
 
-func (r *content) ReadTextContents(ctx context.Context, condition *domain.TextContentCondition) ([]*domain.TextContent, error) {
+func (r *content) ReadTextContents(ctx context.Context, condition *domain.ContentCondition) ([]*domain.TextContent, error) {
 	var mods []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
@@ -56,6 +56,29 @@ func (r *content) ReadTextContents(ctx context.Context, condition *domain.TextCo
 	var results []*domain.TextContent
 	for _, c := range contents {
 		results = append(results, ToTextContent(c))
+	}
+	return results, nil
+}
+
+func (r *content) ReadImageContents(ctx context.Context, condition *domain.ContentCondition) ([]*domain.ImageContent, error) {
+	var mods []qm.QueryMod
+	if condition != nil {
+		if condition.ID != nil {
+			mods = append(mods, boiled.ContentImageWhere.ID.EQ(*condition.ID))
+		}
+		if condition.WhtID != nil {
+			mods = append(mods, boiled.ContentImageWhere.WHTID.EQ(*condition.WhtID))
+		} else if len(condition.WhtIDs) > 0 {
+			mods = append(mods, boiled.ContentImageWhere.WHTID.IN(condition.WhtIDs))
+		}
+	}
+	contents, err := boiled.ContentImages(mods...).All(ctx, r.db)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to insert content_image[condition:%#+v]: %w", condition, err)
+	}
+	var results []*domain.ImageContent
+	for _, c := range contents {
+		results = append(results, ToImageContent(c))
 	}
 	return results, nil
 }

@@ -53,8 +53,8 @@ type TextContentForUpdate struct {
 	Text string
 }
 
-// テキストコンテンツ検索条件
-type TextContentCondition struct {
+// コンテンツ検索条件
+type ContentCondition struct {
 	ID     *int64  // ID
 	WhtID  *int64  // 「今日こと」ID
 	WhtIDs []int64 // 「今日こと」ID群（IN）

@@ -65,3 +65,22 @@ func FromTextContents(inputs []*domain.TextContent) []TextContent {
 	}
 	return results
 }
+
+func FromImageContent(in *domain.ImageContent) ImageContent {
+	if in == nil {
+		return ImageContent{}
+	}
+	return ImageContent{
+		ID:   ImageContentID(in.ID),
+		Name: in.Name,
+		Path: in.Path,
+	}
+}
+
+func FromImageContents(inputs []*domain.ImageContent) []ImageContent {
+	var results []ImageContent
+	for _, in := range inputs {
+		results = append(results, FromImageContent(in))
+	}
+	return results
+}

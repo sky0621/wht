@@ -1,0 +1,17 @@
+query FindWht($condition: WhtConditionInput) {
+  findWht(condition: $condition) {
+    id
+    recordDate
+    title
+    textContents {
+      id
+      name
+      text
+    }
+    imageContents {
+      id
+      name
+      path
+    }
+  }
+}

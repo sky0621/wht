@@ -17,6 +17,7 @@ type Wht interface {
 	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []*domain.TextContentForCreate) error
 	ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
 	ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.TextContent, error)
+	ReadImageContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.ImageContent, error)
 	GetWhtByRecordDate(ctx context.Context, recordDate time.Time) (*domain.Wht, error)
 	UpsertWht(ctx context.Context, in *domain.WhtForCreate) (int64, error)
 }
@@ -84,11 +85,27 @@ func (w wht) ReadWhts(ctx context.Context, condition *domain.WhtCondition) ([]*d
 }
 
 func (w wht) ReadTextContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.TextContent, error) {
-	contents, err := w.contentRepo.ReadTextContents(ctx, &domain.TextContentCondition{WhtIDs: whtIDs})
+	contents, err := w.contentRepo.ReadTextContents(ctx, &domain.ContentCondition{WhtIDs: whtIDs})
 	if err != nil {
 		return nil, xerrors.Errorf("failed to ReadTextContents[WhtIDs:%#+v]: %w", whtIDs, err)
 	}
 	results := make(map[int64][]*domain.TextContent)
+	for _, content := range contents {
+		for _, whtID := range whtIDs {
+			if content.WhtID == whtID {
+				results[whtID] = append(results[whtID], content)
+			}
+		}
+	}
+	return results, nil
+}
+
+func (w wht) ReadImageContents(ctx context.Context, whtIDs []int64) (map[int64][]*domain.ImageContent, error) {
+	contents, err := w.contentRepo.ReadImageContents(ctx, &domain.ContentCondition{WhtIDs: whtIDs})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to ReadImageContents[WhtIDs:%#+v]: %w", whtIDs, err)
+	}
+	results := make(map[int64][]*domain.ImageContent)
 	for _, content := range contents {
 		for _, whtID := range whtIDs {
 			if content.WhtID == whtID {

@@ -37,6 +37,21 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 					return results, nil
 				},
 			}),
+			imageContentLoader: gqlmodel.NewImageContentLoader(gqlmodel.ImageContentLoaderConfig{
+				MaxBatch: 100,
+				Wait:     1 * time.Millisecond,
+				Fetch: func(whtIDs []int64) ([][]gqlmodel.ImageContent, []error) {
+					contentsByID, err := resolver.wht.ReadImageContents(r.Context(), whtIDs)
+					if err != nil {
+						return nil, replicateError(xerrors.Errorf("failed to ReadTextContents(%v): %w", whtIDs, err), len(whtIDs))
+					}
+					results := make([][]gqlmodel.ImageContent, len(whtIDs))
+					for i, whtID := range whtIDs {
+						results[i] = gqlmodel.FromImageContents(contentsByID[whtID])
+					}
+					return results, nil
+				},
+			}),
 		})
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
