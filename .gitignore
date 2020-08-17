@@ -21,3 +21,6 @@ app-credential.json
 view/.nuxt
 view/node_modules
 
+viewold/.nuxt
+viewold/node_modules
+
