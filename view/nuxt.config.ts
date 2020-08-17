@@ -1,5 +1,3 @@
-import colors from 'vuetify/es5/util/colors'
-
 export default {
   /*
    ** Nuxt rendering mode
@@ -46,31 +44,77 @@ export default {
   /*
    ** Nuxt.js dev-modules
    */
-  buildModules: ['@nuxt/typescript-build', '@nuxtjs/vuetify'],
+  buildModules: [
+    '@nuxtjs/eslint-module',
+    '@nuxt/typescript-build',
+    '@nuxtjs/vuetify',
+  ],
   /*
    ** Nuxt.js modules
    */
-  modules: [],
+  modules: [
+    'nuxt-i18n',
+    '@nuxtjs/apollo',
+    '@nuxtjs/proxy',
+    '@nuxtjs/toast',
+    '@nuxtjs/auth',
+  ],
+  i18n: {
+    locales: [
+      {
+        code: 'ja',
+        file: 'ja.json',
+      },
+    ],
+    defaultLocale: 'ja',
+    lazy: true,
+    langDir: 'lang/',
+  },
+  apollo: {
+    clientConfigs: {
+      default: {
+        httpEndpoint: 'http://localhost:8080/query',
+      },
+    },
+    defaultOptions: {
+      $query: {
+        fetchPolicy: 'network-only',
+      },
+    },
+    errorHandler: '~/plugins/apollo-error-handler.ts',
+    // tokenName: 'auth._token.auth0',
+    // authenticationType: '', // default の Bearer だと「Bearer: Bearer」というように重複が起きるため
+  },
   /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module
    */
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
-    theme: {
-      dark: true,
-      themes: {
-        dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          warning: colors.amber.base,
-          error: colors.deepOrange.accent4,
-          success: colors.green.accent3,
-        },
-      },
-    },
+    optionsPath: '~/settings/vuetify.ts',
+  },
+  // auth: {
+  //   redirect: {
+  //     login: '/login',
+  //     logout: '/login',
+  //     callback: '/callback',
+  //     home: '/',
+  //   },
+  //   strategies: {
+  //     auth0: {
+  //       domain: process.env.AUTH0_DOMAIN,
+  //       client_id: process.env.AUTH0_CLIENT_ID,
+  //       audience: process.env.AUTH0_AUDIENCE,
+  //     },
+  //   },
+  //   plugins: ['~/plugins/auth.ts'],
+  // },
+  // router: {
+  //   middleware: ['auth'],
+  // },
+  toast: {
+    position: 'top-center',
+    duration: 5000,
   },
   /*
    ** Build configuration
