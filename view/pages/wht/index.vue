@@ -5,8 +5,8 @@
 <script lang="ts">
 import { Vue, Component } from 'nuxt-property-decorator'
 import 'vue-apollo'
-import WhtList from '@/components/wht/List'
-import FindWht from '@/apollo/queries/wht.gql'
+import WhtList from '@/components/wht/List.vue'
+import { FindWht } from '@/apollo/queries/wht'
 
 @Component({
   components: { WhtList },

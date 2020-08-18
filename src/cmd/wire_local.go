@@ -5,6 +5,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -84,9 +88,26 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 	}))
 
 	// FIXME: 本番はNG
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	var workDir string
+	{
+		var err error
+		workDir, err = os.Getwd()
+		if err != nil {
+			return nil, xerrors.Errorf("failed to Getwd: %w", err)
+		}
+	}
+
+	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		ctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
+		fs.ServeHTTP(w, r)
+	})
 
 	return server.New(r, nil), nil
 }

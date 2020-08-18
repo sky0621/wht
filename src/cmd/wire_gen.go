@@ -33,6 +33,10 @@ import (
 	"gocloud.dev/server/health"
 	"gocloud.dev/server/sdserver"
 	"golang.org/x/xerrors"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -193,13 +197,31 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
 
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	var workDir string
+	{
+		var err error
+		workDir, err = os.Getwd()
+		if err != nil {
+			return nil, xerrors.Errorf("failed to Getwd: %w", err)
+		}
+	}
+
+	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		ctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
+		fs.ServeHTTP(w, r)
+	})
 
 	return server.New(r, options), nil
 }
@@ -300,9 +322,26 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 		MaxAge:           300,
 	}))
 
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	var workDir string
+	{
+		var err error
+		workDir, err = os.Getwd()
+		if err != nil {
+			return nil, xerrors.Errorf("failed to Getwd: %w", err)
+		}
+	}
+
+	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		ctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
+		fs.ServeHTTP(w, r)
+	})
 
 	return server.New(r, nil), nil
 }

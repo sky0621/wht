@@ -6,6 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,7 +18,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/google/wire"
@@ -153,14 +156,32 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
 
-	// FIXME: 本番はNG
-	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+
+	var workDir string
+	{
+		var err error
+		workDir, err = os.Getwd()
+		if err != nil {
+			return nil, xerrors.Errorf("failed to Getwd: %w", err)
+		}
+	}
+
+	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		ctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
+		fs.ServeHTTP(w, r)
+	})
+	//r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
 	return server.New(r, options), nil
 }
