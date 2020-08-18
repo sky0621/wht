@@ -73,7 +73,8 @@ export default {
   apollo: {
     clientConfigs: {
       default: {
-        httpEndpoint: 'http://localhost:8080/query',
+        httpEndpoint:
+          process.env.WHT_API_ENDPOINT || 'http://localhost:8080/query',
       },
     },
     defaultOptions: {
