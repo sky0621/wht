@@ -137,7 +137,7 @@ type SignedURLFunc func(ctx context.Context, bucket, object string, expire time.
 type UploadObjectFunc func(ctx context.Context, bucket, object string, reader io.Reader) error
 
 func getBucket(ctx context.Context, bucket string) (*blob.Bucket, func(), error) {
-	b, err := blob.OpenBucket(ctx, bucket)
+	b, err := blob.OpenBucket(ctx, "gs://"+bucket)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("Failed to setup bucket: %w", err)
 	}

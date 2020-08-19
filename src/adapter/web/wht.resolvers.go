@@ -19,6 +19,7 @@ import (
 // ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
+	// FIXME: application transaction
 	id, err := r.wht.CreateWht(ctx, gqlmodel.ToWhtForCreate(wht))
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
