@@ -1,11 +1,8 @@
 <template>
   <v-app>
-    <v-system-bar fixed app><v-icon>mdi-gmail</v-icon></v-system-bar>
-    <v-app-bar fixed app>
+    <v-app-bar fixed app color="primary">
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title v-text="title" />
-      <v-spacer />
-      <v-window></v-window>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" fixed app>
       <v-list>
