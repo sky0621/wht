@@ -1,21 +1,11 @@
 import gql from 'graphql-tag'
 
 export const FindWht = gql`
-  query FindWht($condition: WhtConditionInput) {
-    findWht(condition: $condition) {
+  query FindWht {
+    findWht {
       id
       recordDate
-      title
-      textContents {
-        id
-        name
-        text
-      }
-      imageContents {
-        id
-        name
-        path
-      }
+      path
     }
   }
 `

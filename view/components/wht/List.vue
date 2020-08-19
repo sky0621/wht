@@ -28,7 +28,7 @@ export default class WhtList extends Vue {
     return [
       { text: 'ID', value: 'id' },
       { text: '日づけ', value: 'recordDate' },
-      { text: 'タイトル', value: 'title' },
+      { text: '画像', value: 'path' },
     ]
   }
 
