@@ -6,10 +6,6 @@ package boiled
 import "testing"
 
 func TestUpsert(t *testing.T) {
-	t.Run("ContentImages", testContentImagesUpsert)
-
-	t.Run("ContentTexts", testContentTextsUpsert)
-
 	t.Run("Migrations", testMigrationsUpsert)
 
 	t.Run("WHTS", testWHTSUpsert)

@@ -4,13 +4,9 @@
 package boiled
 
 var TableNames = struct {
-	ContentImage string
-	ContentText  string
-	Migration    string
-	WHT          string
+	Migration string
+	WHT       string
 }{
-	ContentImage: "content_image",
-	ContentText:  "content_text",
-	Migration:    "migration",
-	WHT:          "wht",
+	Migration: "migration",
+	WHT:       "wht",
 }

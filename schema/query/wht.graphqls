@@ -1,27 +1,6 @@
-
 extend type Query {
     "「今日こと」を取得"
-    findWht(condition: WhtConditionInput): [Wht!]! @hasRole(role: VIEWER)
-}
-
-"「今日こと」検索条件"
-input WhtConditionInput {
-    "ID"
-    id: WhtID
-    "記録日"
-    recordDate: Date
-    "タイトル"
-    title: String
-    "検索方法"
-    compare: Compare
-}
-
-"検索方法"
-enum Compare {
-    "完全一致"
-    Equal
-    "曖昧検索"
-    Like
+    findWht: [Wht!]!
 }
 
 "今日こと"
@@ -30,50 +9,6 @@ type Wht implements Node{
     id: ID!
     "記録日"
     recordDate: Date!
-    "タイトル"
-    title: String
-    "テキストコンテンツ"
-    textContents: [TextContent!]
-    "画像コンテンツ"
-    imageContents: [ImageContent!]
-    "画像コンテンツ"
-    voiceContents: [VoiceContent!]
-    "動画コンテンツ"
-    movieContents: [MovieContent!]
-}
-
-"テキストコンテンツ"
-type TextContent {
-    id: ID!
-    "コンテンツ名"
-    name: String
-    "テキスト"
-    text: String!
-}
-
-"画像コンテンツ"
-type ImageContent {
-    id: ID!
-    "コンテンツ名"
-    name: String
     "画像パス"
-    path: String!
-}
-
-"音声コンテンツ"
-type VoiceContent {
-    id: ID!
-    "コンテンツ名"
-    name: String
-    "音声パス"
-    path: String!
-}
-
-"動画コンテンツ"
-type MovieContent {
-    id: ID!
-    "コンテンツ名"
-    name: String
-    "動画パス"
     path: String!
 }

@@ -31,5 +31,4 @@ var usecaseHandler = wire.NewSet(
 
 var repositoryHandler = wire.NewSet(
 	rdb.NewWhtRepository,
-	rdb.NewContentRepository,
 )

@@ -90,7 +90,7 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 	// FIXME: 本番はNG
 	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Handle("/query", graphQlServer(resolver))
 
 	var workDir string
 	{

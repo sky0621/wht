@@ -26,7 +26,7 @@ import (
 type WHT struct {
 	ID         int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	RecordDate time.Time   `boil:"record_date" json:"record_date" toml:"record_date" yaml:"record_date"`
-	Title      null.String `boil:"title" json:"title,omitempty" toml:"title" yaml:"title,omitempty"`
+	Path       string      `boil:"path" json:"path" toml:"path" yaml:"path"`
 	CreatedBy  null.String `boil:"created_by" json:"created_by,omitempty" toml:"created_by" yaml:"created_by,omitempty"`
 	CreatedAt  time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedBy  null.String `boil:"updated_by" json:"updated_by,omitempty" toml:"updated_by" yaml:"updated_by,omitempty"`
@@ -39,7 +39,7 @@ type WHT struct {
 var WHTColumns = struct {
 	ID         string
 	RecordDate string
-	Title      string
+	Path       string
 	CreatedBy  string
 	CreatedAt  string
 	UpdatedBy  string
@@ -47,7 +47,7 @@ var WHTColumns = struct {
 }{
 	ID:         "id",
 	RecordDate: "record_date",
-	Title:      "title",
+	Path:       "path",
 	CreatedBy:  "created_by",
 	CreatedAt:  "created_at",
 	UpdatedBy:  "updated_by",
@@ -56,10 +56,77 @@ var WHTColumns = struct {
 
 // Generated where
 
+type whereHelperint64 struct{ field string }
+
+func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+type whereHelpertime_Time struct{ field string }
+
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var WHTWhere = struct {
 	ID         whereHelperint64
 	RecordDate whereHelpertime_Time
-	Title      whereHelpernull_String
+	Path       whereHelperstring
 	CreatedBy  whereHelpernull_String
 	CreatedAt  whereHelpertime_Time
 	UpdatedBy  whereHelpernull_String
@@ -67,7 +134,7 @@ var WHTWhere = struct {
 }{
 	ID:         whereHelperint64{field: "\"wht\".\"id\""},
 	RecordDate: whereHelpertime_Time{field: "\"wht\".\"record_date\""},
-	Title:      whereHelpernull_String{field: "\"wht\".\"title\""},
+	Path:       whereHelperstring{field: "\"wht\".\"path\""},
 	CreatedBy:  whereHelpernull_String{field: "\"wht\".\"created_by\""},
 	CreatedAt:  whereHelpertime_Time{field: "\"wht\".\"created_at\""},
 	UpdatedBy:  whereHelpernull_String{field: "\"wht\".\"updated_by\""},
@@ -76,17 +143,10 @@ var WHTWhere = struct {
 
 // WHTRels is where relationship names are stored.
 var WHTRels = struct {
-	ContentImages string
-	ContentTexts  string
-}{
-	ContentImages: "ContentImages",
-	ContentTexts:  "ContentTexts",
-}
+}{}
 
 // whtR is where relationships are stored.
 type whtR struct {
-	ContentImages ContentImageSlice `boil:"ContentImages" json:"ContentImages" toml:"ContentImages" yaml:"ContentImages"`
-	ContentTexts  ContentTextSlice  `boil:"ContentTexts" json:"ContentTexts" toml:"ContentTexts" yaml:"ContentTexts"`
 }
 
 // NewStruct creates a new relationship struct
@@ -98,8 +158,8 @@ func (*whtR) NewStruct() *whtR {
 type whtL struct{}
 
 var (
-	whtAllColumns            = []string{"id", "record_date", "title", "created_by", "created_at", "updated_by", "updated_at"}
-	whtColumnsWithoutDefault = []string{"record_date", "title", "created_by", "updated_by"}
+	whtAllColumns            = []string{"id", "record_date", "path", "created_by", "created_at", "updated_by", "updated_at"}
+	whtColumnsWithoutDefault = []string{"record_date", "path", "created_by", "updated_by"}
 	whtColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	whtPrimaryKeyColumns     = []string{"id"}
 )
@@ -377,350 +437,6 @@ func (q whtQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, 
 	}
 
 	return count > 0, nil
-}
-
-// ContentImages retrieves all the content_image's ContentImages with an executor.
-func (o *WHT) ContentImages(mods ...qm.QueryMod) contentImageQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"content_image\".\"wht_id\"=?", o.ID),
-	)
-
-	query := ContentImages(queryMods...)
-	queries.SetFrom(query.Query, "\"content_image\"")
-
-	if len(queries.GetSelect(query.Query)) == 0 {
-		queries.SetSelect(query.Query, []string{"\"content_image\".*"})
-	}
-
-	return query
-}
-
-// ContentTexts retrieves all the content_text's ContentTexts with an executor.
-func (o *WHT) ContentTexts(mods ...qm.QueryMod) contentTextQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"content_text\".\"wht_id\"=?", o.ID),
-	)
-
-	query := ContentTexts(queryMods...)
-	queries.SetFrom(query.Query, "\"content_text\"")
-
-	if len(queries.GetSelect(query.Query)) == 0 {
-		queries.SetSelect(query.Query, []string{"\"content_text\".*"})
-	}
-
-	return query
-}
-
-// LoadContentImages allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (whtL) LoadContentImages(ctx context.Context, e boil.ContextExecutor, singular bool, maybeWHT interface{}, mods queries.Applicator) error {
-	var slice []*WHT
-	var object *WHT
-
-	if singular {
-		object = maybeWHT.(*WHT)
-	} else {
-		slice = *maybeWHT.(*[]*WHT)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &whtR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &whtR{}
-			}
-
-			for _, a := range args {
-				if a == obj.ID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`content_image`),
-		qm.WhereIn(`content_image.wht_id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load content_image")
-	}
-
-	var resultSlice []*ContentImage
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice content_image")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on content_image")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for content_image")
-	}
-
-	if len(contentImageAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.ContentImages = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &contentImageR{}
-			}
-			foreign.R.WHT = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.ID == foreign.WHTID {
-				local.R.ContentImages = append(local.R.ContentImages, foreign)
-				if foreign.R == nil {
-					foreign.R = &contentImageR{}
-				}
-				foreign.R.WHT = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadContentTexts allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (whtL) LoadContentTexts(ctx context.Context, e boil.ContextExecutor, singular bool, maybeWHT interface{}, mods queries.Applicator) error {
-	var slice []*WHT
-	var object *WHT
-
-	if singular {
-		object = maybeWHT.(*WHT)
-	} else {
-		slice = *maybeWHT.(*[]*WHT)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &whtR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &whtR{}
-			}
-
-			for _, a := range args {
-				if a == obj.ID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`content_text`),
-		qm.WhereIn(`content_text.wht_id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load content_text")
-	}
-
-	var resultSlice []*ContentText
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice content_text")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on content_text")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for content_text")
-	}
-
-	if len(contentTextAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.ContentTexts = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &contentTextR{}
-			}
-			foreign.R.WHT = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.ID == foreign.WHTID {
-				local.R.ContentTexts = append(local.R.ContentTexts, foreign)
-				if foreign.R == nil {
-					foreign.R = &contentTextR{}
-				}
-				foreign.R.WHT = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// AddContentImages adds the given related objects to the existing relationships
-// of the wht, optionally inserting them as new records.
-// Appends related to o.R.ContentImages.
-// Sets related.R.WHT appropriately.
-func (o *WHT) AddContentImages(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*ContentImage) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.WHTID = o.ID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"content_image\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"wht_id"}),
-				strmangle.WhereClause("\"", "\"", 2, contentImagePrimaryKeyColumns),
-			)
-			values := []interface{}{o.ID, rel.ID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.WHTID = o.ID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &whtR{
-			ContentImages: related,
-		}
-	} else {
-		o.R.ContentImages = append(o.R.ContentImages, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &contentImageR{
-				WHT: o,
-			}
-		} else {
-			rel.R.WHT = o
-		}
-	}
-	return nil
-}
-
-// AddContentTexts adds the given related objects to the existing relationships
-// of the wht, optionally inserting them as new records.
-// Appends related to o.R.ContentTexts.
-// Sets related.R.WHT appropriately.
-func (o *WHT) AddContentTexts(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*ContentText) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.WHTID = o.ID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"content_text\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"wht_id"}),
-				strmangle.WhereClause("\"", "\"", 2, contentTextPrimaryKeyColumns),
-			)
-			values := []interface{}{o.ID, rel.ID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.WHTID = o.ID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &whtR{
-			ContentTexts: related,
-		}
-	} else {
-		o.R.ContentTexts = append(o.R.ContentTexts, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &contentTextR{
-				WHT: o,
-			}
-		} else {
-			rel.R.WHT = o
-		}
-	}
-	return nil
 }
 
 // WHTS retrieves all the records using an executor.

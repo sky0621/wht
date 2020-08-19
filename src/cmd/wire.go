@@ -25,7 +25,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sky0621/wht/adapter/storage"
 	"github.com/sky0621/wht/adapter/web"
-	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"go.opencensus.io/trace"
@@ -163,7 +162,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Handle("/query", graphQlServer(resolver))
 
 	var workDir string
 	{
@@ -190,11 +189,7 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	log.Debug().Msg("graphQlServer___START")
 
 	cfg := web.Config{Resolvers: resolver}
-	// FIXME: 認可実装
-	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
-		// or let it pass through
-		return next(ctx)
-	}
+
 	srv := handler.New(web.NewExecutableSchema(cfg))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})

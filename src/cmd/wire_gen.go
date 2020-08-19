@@ -23,7 +23,6 @@ import (
 	"github.com/sky0621/wht/adapter/rdb"
 	"github.com/sky0621/wht/adapter/storage"
 	"github.com/sky0621/wht/adapter/web"
-	"github.com/sky0621/wht/adapter/web/gqlmodel"
 	"github.com/sky0621/wht/application/usecase"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -54,8 +53,7 @@ func build(ctx context.Context, cfg config) (*app, func(), error) {
 		return nil, nil, err
 	}
 	wht := rdb.NewWhtRepository(contextExecutor)
-	content := rdb.NewContentRepository(contextExecutor)
-	usecaseWht := usecase.NewWht(wht, content)
+	usecaseWht := usecase.NewWht(wht)
 	cloudStorageClient, err := setupCloudStorageClient(ctx, cfg)
 	if err != nil {
 		cleanup()
@@ -81,8 +79,7 @@ func buildLocal(ctx context.Context, cfg config) (*app, func(), error) {
 		return nil, nil, err
 	}
 	wht := rdb.NewWhtRepository(contextExecutor)
-	content := rdb.NewContentRepository(contextExecutor)
-	usecaseWht := usecase.NewWht(wht, content)
+	usecaseWht := usecase.NewWht(wht)
 	cloudStorageClient, err := setupLocalCloudStorageClient(ctx, cfg)
 	if err != nil {
 		cleanup()
@@ -204,7 +201,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Handle("/query", graphQlServer(resolver))
 
 	var workDir string
 	{
@@ -231,10 +228,6 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 
 	cfg := web.Config{Resolvers: resolver}
 
-	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
-
-		return next(ctx)
-	}
 	srv := handler.New(web.NewExecutableSchema(cfg))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -324,7 +317,7 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 
 	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
-	r.Handle("/query", web.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	r.Handle("/query", graphQlServer(resolver))
 
 	var workDir string
 	{

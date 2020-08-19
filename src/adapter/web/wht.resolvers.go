@@ -6,14 +6,12 @@ package web
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/sky0621/wht/lib"
 
 	"github.com/sky0621/wht/adapter/storage"
 
 	"github.com/sky0621/wht/adapter/web/gqlmodel"
-	"github.com/sky0621/wht/application/domain"
 )
 
 // ------------------------------------------------------------------
@@ -26,87 +24,36 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-	return &gqlmodel.MutationResponse{ID: lib.FromInt64ToPStr(id)}, nil
-}
-
-func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
-	if err := r.wht.CreateTextContents(ctx, recordDate, gqlmodel.ToTextContentForCreateSlice(inputs)); err != nil {
+	// FIXME:
+	if err := r.gcsClient.ExecUploadObject(ctx, storage.ImageContentsBucket, wht.Image.Filename, wht.Image.File); err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-	// TODO: empty response
-	return &gqlmodel.MutationResponse{}, nil
-}
-
-func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
-	// FIXME:
-	for _, in := range inputs {
-		if err := r.gcsClient.ExecUploadObject(ctx, storage.ImageContentsBucket, in.Image.Filename, in.Image.File); err != nil {
-			fmt.Printf("%#+v", err) // TODO: use custom logger
-			return nil, err
-		}
-	}
-	return &gqlmodel.MutationResponse{
-		ID: nil,
-	}, nil
-}
-
-func (r *mutationResolver) CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) CreateMovieContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
+	return &gqlmodel.MutationResponse{ID: lib.FromInt64ToPStr(id)}, nil
 }
 
 // ------------------------------------------------------------------
 // Query
 // ------------------------------------------------------------------
 
-func (r *queryResolver) FindWht(ctx context.Context, c *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
+func (r *queryResolver) FindWht(ctx context.Context) ([]gqlmodel.Wht, error) {
 	logger := lib.RequestCtxLogger(ctx)
 	logger.Info().Msg("FindWht___START")
 
-	condition := &domain.WhtCondition{}
-	if c != nil {
-		condition.ID = c.ID.DBUniqueIDPtr()
-	}
-
-	records, err := r.wht.ReadWhts(ctx, condition)
+	records, err := r.wht.ReadWhts(ctx)
 	if err != nil {
 		logger.Err(err).Msgf("%+v", err)
 		return nil, err
 	}
-
-	return gqlmodel.FromWhts(records), nil
-}
-
-func (r *whtResolver) TextContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.TextContent, error) {
-	contents, err := For(ctx).textContentLoader.Load(obj.ID.DBUniqueID())
-	if err != nil {
-		fmt.Printf("%#+v", err) // TODO: use custom logger
-		return nil, err
+	var results []gqlmodel.Wht
+	for _, record := range records {
+		results = append(results, gqlmodel.Wht{
+			ID:         gqlmodel.WhtID(record.ID),
+			RecordDate: record.RecordDate,
+			Path:       record.Path, // FIXME: 署名付きURL生成
+		},
+		)
 	}
-	return contents, nil
+
+	return results, nil
 }
-
-func (r *whtResolver) ImageContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.ImageContent, error) {
-	contents, err := For(ctx).imageContentLoader.Load(obj.ID.DBUniqueID())
-	if err != nil {
-		fmt.Printf("%#+v", err) // TODO: use custom logger
-		return nil, err
-	}
-	return contents, nil
-}
-
-func (r *whtResolver) VoiceContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.VoiceContent, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *whtResolver) MovieContents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.MovieContent, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *Resolver) Wht() WhtResolver { return &whtResolver{r} }
-
-type whtResolver struct{ *Resolver }

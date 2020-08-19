@@ -10,10 +10,8 @@ type Wht struct {
 	ID WhtID `json:"id"`
 	// 記録日
 	RecordDate time.Time `json:"recordDate"`
-	// タイトル
-	Title *string `json:"title"`
-	// コンテンツリスト
-	//Contents []Content `json:"contents"`
+	// 画像パス
+	Path string `json:"path"`
 }
 
 func (Wht) IsNode() {}

@@ -34,21 +34,3 @@ scalar Upload
 
 # WhtID ... format: urlEncoded("WhtID:dbUniqueID")
 scalar WhtID
-# TextContentID ... format: urlEncoded("TextContentID:dbUniqueID")
-scalar TextContentID
-# ImageContentID ... format: urlEncoded("TextContentID:dbUniqueID")
-scalar ImageContentID
-# VoiceContentID ... format: urlEncoded("TextContentID:dbUniqueID")
-scalar VoiceContentID
-# MovieContentID ... format: urlEncoded("TextContentID:dbUniqueID")
-scalar MovieContentID
-
-directive @hasRole(role: Role!) on FIELD_DEFINITION
-
-enum Role {
-  ADMIN
-  MANAGER
-  EDITOR
-  VIEWER
-  GUEST
-}
