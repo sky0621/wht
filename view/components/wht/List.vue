@@ -1,70 +1,114 @@
 <template>
-  <v-container>
-    <v-row justify="center">
-      <v-col md="12">
-        <v-toolbar flat>
+  <v-row class="fill-height">
+    <v-col>
+      <v-sheet height="64">
+        <v-toolbar flat color="white">
           <v-btn outlined class="mr-4" color="grey darken-2" @click="setToday">
             Today
           </v-btn>
-          <v-btn text small color="grey darken-2" @click="prev">
-            <v-icon small>mdi-chevron-left</v-icon>Prev
+          <v-btn fab text small color="grey darken-2" @click="prev">
+            <v-icon small>mdi-chevron-left</v-icon>
           </v-btn>
-          <v-btn text small color="grey darken-2" @click="next">
-            Next<v-icon small>mdi-chevron-right</v-icon>
+          <v-btn fab text small color="grey darken-2" @click="next">
+            <v-icon small>mdi-chevron-right</v-icon>
           </v-btn>
-          <v-toolbar-title>{{ title }}</v-toolbar-title>
+          <v-toolbar-title v-if="$refs.calendar">
+            {{ $refs.calendar.title }}
+          </v-toolbar-title>
         </v-toolbar>
-      </v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-col md="12">
+      </v-sheet>
+      <v-sheet height="600">
         <v-calendar
-          :weekdays="weekdays"
-          :short-months="isShort"
-          :short-weekdays="isShort"
+          ref="calendar"
+          v-model="focus"
+          color="primary"
+          :events="events"
+          :event-color="getEventColor"
+          :type="type"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
         ></v-calendar>
-      </v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-col md="1">
-        <v-btn fab @click="move">
-          <v-icon>mdi-plus</v-icon>
-        </v-btn>
-      </v-col>
-      <v-col md="auto">
-        <v-data-table :items="whts" :headers="headers">
-          <template v-slot:item.path="{ item }">
-            <v-img :src="item.path" eager max-width="128px"></v-img>
-          </template>
-        </v-data-table>
-      </v-col>
-    </v-row>
-  </v-container>
+        <v-menu
+          v-model="selectedOpen"
+          :close-on-content-click="false"
+          :activator="selectedElement"
+          offset-x
+        >
+          <v-card color="grey lighten-4" min-width="350px" flat>
+            <v-toolbar :color="selectedEvent.color" dark>
+              <v-btn icon>
+                <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-btn icon>
+                <v-icon>mdi-heart</v-icon>
+              </v-btn>
+              <v-btn icon>
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </v-toolbar>
+            <v-card-text>
+              <span v-html="selectedEvent.details"></span>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn text color="secondary" @click="selectedOpen = false">
+                Cancel
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-menu>
+      </v-sheet>
+    </v-col>
+  </v-row>
 </template>
 
-<script lang="ts">
-import { Vue, Component, Prop, Emit } from 'nuxt-property-decorator'
-import { DataTableHeader } from '~/types/vuetify'
-import 'vue-apollo'
-import { Wht } from '~/types/gql-types'
+<script>
+export default {
+  data: () => ({
+    focus: '',
+    type: 'month',
+    selectedEvent: {},
+    selectedElement: null,
+    selectedOpen: false,
+    events: [],
+  }),
+  mounted() {
+    this.$refs.calendar.checkChange()
+  },
+  methods: {
+    viewDay({ date }) {
+      console.log(date)
+    },
+    getEventColor(event) {
+      return event.color
+    },
+    setToday() {
+      this.focus = ''
+    },
+    prev() {
+      this.$refs.calendar.prev()
+    },
+    next() {
+      this.$refs.calendar.next()
+    },
+    showEvent({ nativeEvent, event }) {
+      const open = () => {
+        this.selectedEvent = event
+        this.selectedElement = nativeEvent.target
+        setTimeout(() => (this.selectedOpen = true), 10)
+      }
 
-@Component({})
-export default class WhtList extends Vue {
-  @Prop({ default: () => {} })
-  readonly whts!: Wht[]
+      if (this.selectedOpen) {
+        this.selectedOpen = false
+        setTimeout(open, 10)
+      } else {
+        open()
+      }
 
-  readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
-  readonly isShort = false
-
-  get headers(): DataTableHeader[] {
-    return [
-      { text: 'ID', value: 'id' },
-      { text: '日づけ', value: 'recordDate' },
-      { text: '画像', value: 'path' },
-    ]
-  }
-
-  @Emit('move')
-  move(): void {}
+      nativeEvent.stopPropagation()
+    },
+  },
 }
 </script>
