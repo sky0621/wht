@@ -25,6 +25,9 @@
           :events="events"
           :event-color="getEventColor"
           :type="type"
+          :weekdays="weekdays"
+          :short-weekdays="isShort"
+          :short-months="isShort"
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
@@ -64,51 +67,68 @@
   </v-row>
 </template>
 
-<script>
-export default {
-  data: () => ({
-    focus: '',
-    type: 'month',
-    selectedEvent: {},
-    selectedElement: null,
-    selectedOpen: false,
-    events: [],
-  }),
+<script lang="ts">
+import { Vue, Component, Prop } from 'nuxt-property-decorator'
+import 'vue-apollo'
+import { Wht } from '~/types/gql-types'
+
+@Component({})
+export default class WhtList extends Vue {
+  @Prop({ default: () => {} })
+  readonly whts!: Wht[]
+
+  readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
+  readonly isShort = false
+
+  focus = ''
+  type = 'month'
+  selectedEvent = {}
+  selectedElement = null
+  selectedOpen = false
+  events = []
+
   mounted() {
-    this.$refs.calendar.checkChange()
-  },
-  methods: {
-    viewDay({ date }) {
-      console.log(date)
-    },
-    getEventColor(event) {
-      return event.color
-    },
-    setToday() {
-      this.focus = ''
-    },
-    prev() {
-      this.$refs.calendar.prev()
-    },
-    next() {
-      this.$refs.calendar.next()
-    },
-    showEvent({ nativeEvent, event }) {
-      const open = () => {
-        this.selectedEvent = event
-        this.selectedElement = nativeEvent.target
-        setTimeout(() => (this.selectedOpen = true), 10)
-      }
+    const cal: any = this.$refs.calendar
+    cal.checkChange()
+  }
 
-      if (this.selectedOpen) {
-        this.selectedOpen = false
-        setTimeout(open, 10)
-      } else {
-        open()
-      }
+  viewDay({ date }) {
+    console.log(date)
+  }
 
-      nativeEvent.stopPropagation()
-    },
-  },
+  getEventColor(event: any) {
+    return event.color
+  }
+
+  setToday() {
+    this.focus = ''
+  }
+
+  prev() {
+    const cal: any = this.$refs.calendar
+    cal.prev()
+  }
+
+  next() {
+    const cal: any = this.$refs.calendar
+    cal.next()
+  }
+
+  showEvent({ nativeEvent, event }) {
+    const open = () => {
+      this.selectedEvent = event
+      this.selectedElement = nativeEvent.target
+      setTimeout(() => (this.selectedOpen = true), 10)
+    }
+
+    if (this.selectedOpen) {
+      this.selectedOpen = false
+      setTimeout(open, 10)
+    } else {
+      open()
+    }
+
+    nativeEvent.stopPropagation()
+  }
 }
 </script>
