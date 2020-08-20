@@ -6,6 +6,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sky0621/wht/lib"
 
@@ -19,7 +20,7 @@ import (
 // ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
-	// FIXME: application transaction
+	// FIXME: application transaction or ???
 	id, err := r.wht.CreateWht(ctx, gqlmodel.ToWhtForCreate(wht))
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
@@ -48,10 +49,15 @@ func (r *queryResolver) FindWht(ctx context.Context) ([]gqlmodel.Wht, error) {
 	}
 	var results []gqlmodel.Wht
 	for _, record := range records {
+		url, err := r.gcsClient.ExecSignedURL(ctx, storage.ImageContentsBucket, record.Path, 30*time.Minute)
+		if err != nil {
+			logger.Err(err).Msgf("%+v", err)
+			return nil, err
+		}
 		results = append(results, gqlmodel.Wht{
 			ID:         gqlmodel.WhtID(record.ID),
 			RecordDate: record.RecordDate,
-			Path:       record.Path, // FIXME: 署名付きURL生成
+			Path:       url,
 		},
 		)
 	}

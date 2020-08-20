@@ -115,7 +115,7 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 func setupLocalCloudStorageClient(ctx context.Context, cfg config) (storage.CloudStorageClient, error) {
 	log.Debug().Msg("setupLocalCloudStorageClient___START")
 
-	// FIXME: モックを返却
+	// FIXME: モックを返却 or fileblob ?
 	bucketNameMap := map[storage.BucketPurpose]string{
 		storage.ImageContentsBucket: cfg.ImageContentsBucket,
 	}

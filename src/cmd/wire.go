@@ -209,11 +209,13 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	})
 
 	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		// FIXME:
 		log.Err(err).Msgf("failed to graphQL service: %+v", err)
 		return graphql.DefaultErrorPresenter(ctx, err)
 	})
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		// FIXME:
 		return xerrors.Errorf("panic occurred: %w", err)
 	})
 
