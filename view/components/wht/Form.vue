@@ -4,7 +4,13 @@
       <v-row justify="center">
         <v-col md="auto">
           RecordDate: <v-text-field v-model="input.recordDate"></v-text-field>
-          <v-file-input v-model="input.image"></v-file-input>
+          <v-file-input
+            v-model="input.image"
+            accept="image/*"
+            show-size
+            label="「今日こと」画像ファイルをアップロードしてください"
+            prepend-icon="mdi-image"
+          ></v-file-input>
           <v-btn @click="save">登録</v-btn>
           <v-btn @click="cancel">キャンセル</v-btn>
         </v-col>

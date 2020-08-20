@@ -7,7 +7,11 @@
         </v-btn>
       </v-col>
       <v-col md="auto">
-        <v-data-table :items="whts" :headers="headers"></v-data-table>
+        <v-data-table :items="whts" :headers="headers">
+          <template v-slot:item.path="{ item }">
+            <v-img :src="item.path" eager max-width="128px"></v-img>
+          </template>
+        </v-data-table>
       </v-col>
     </v-row>
   </v-container>
