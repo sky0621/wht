@@ -92,8 +92,8 @@ export default class WhtList extends Vue {
     cal.checkChange()
   }
 
-  viewDay({ date }) {
-    console.log(date)
+  viewDay(ctx: any) {
+    console.log(ctx.date)
   }
 
   getEventColor(event: any) {
@@ -114,10 +114,10 @@ export default class WhtList extends Vue {
     cal.next()
   }
 
-  showEvent({ nativeEvent, event }) {
+  showEvent(ctx: any) {
     const open = () => {
-      this.selectedEvent = event
-      this.selectedElement = nativeEvent.target
+      this.selectedEvent = ctx.event
+      this.selectedElement = ctx.nativeEvent.target
       setTimeout(() => (this.selectedOpen = true), 10)
     }
 
@@ -128,7 +128,7 @@ export default class WhtList extends Vue {
       open()
     }
 
-    nativeEvent.stopPropagation()
+    ctx.nativeEvent.stopPropagation()
   }
 }
 </script>
