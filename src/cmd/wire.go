@@ -18,6 +18,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/google/wire"
@@ -160,7 +161,10 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
 
-	r.Use(middleware.Timeout(60 * time.Second))
+	//r.Use(middleware.Timeout(60 * time.Second))
+
+	// FIXME: 本番はNG
+	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", graphQlServer(resolver))
 
@@ -172,11 +176,18 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 			return nil, xerrors.Errorf("failed to Getwd: %w", err)
 		}
 	}
+	log.Info().Msgf("workDir:%s", workDir)
 
 	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	log.Info().Msgf("filesDir:%#+v", filesDir)
+
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Interface("URL", r.URL).Msg("REQUEST")
+
 		ctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
+		log.Info().Msgf("pathPrefix:%s", pathPrefix)
+
 		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
 		fs.ServeHTTP(w, r)
 	})
