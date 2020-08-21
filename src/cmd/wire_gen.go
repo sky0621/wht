@@ -252,6 +252,7 @@ func graphQlServer(resolver *web.Resolver) *handler.Server {
 	})
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+
 		return xerrors.Errorf("panic occurred: %w", err)
 	})
 
