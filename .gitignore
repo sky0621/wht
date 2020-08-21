@@ -23,3 +23,5 @@ view/node_modules
 
 src/dist/*
 
+.run/
+

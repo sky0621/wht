@@ -31,5 +31,9 @@ COPY --from=builder /app/dist /dist
 COPY --from=builder /app/app-credential.json /app-credential.json
 ENV GOOGLE_APPLICATION_CREDENTIALS /app-credential.json
 
+RUN pwd
+RUN ls -la /
+RUN ls -la /dist
+
 # Run the web application on container startup.
 CMD ["/server"]

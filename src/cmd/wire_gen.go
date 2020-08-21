@@ -199,6 +199,8 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
 
+	r.Use(middleware.Timeout(60 * time.Second))
+
 	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
 
 	r.Handle("/query", graphQlServer(resolver))
@@ -217,7 +219,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	log.Info().Msgf("filesDir:%#+v", filesDir)
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Interface("URL", r.URL).Msg("REQUEST")
+		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Msg("REQUEST")
 
 		ctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")

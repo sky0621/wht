@@ -161,7 +161,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	r.Use(middleware.Recoverer)
 	r.Use(requestCtxLogger())
 
-	//r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.Timeout(60 * time.Second))
 
 	// FIXME: 本番はNG
 	r.HandleFunc("/pg", playground.Handler("GraphQL playground", "/query"))
@@ -182,7 +182,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	log.Info().Msgf("filesDir:%#+v", filesDir)
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Interface("URL", r.URL).Msg("REQUEST")
+		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Msg("REQUEST")
 
 		ctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
@@ -191,7 +191,6 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
 		fs.ServeHTTP(w, r)
 	})
-	//r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
 	return server.New(r, options), nil
 }
