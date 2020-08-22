@@ -329,30 +329,6 @@ func setupLocalServer(ctx context.Context, cfg config, resolver *web.Resolver) (
 
 	r.Handle("/query", graphQlServer(resolver))
 
-	var workDir string
-	{
-		var err error
-		workDir, err = os.Getwd()
-		if err != nil {
-			return nil, xerrors.Errorf("failed to Getwd: %w", err)
-		}
-	}
-	log.Info().Msgf("workDir:%s", workDir)
-
-	filesDir := http.Dir(filepath.Join(workDir, "dist"))
-	log.Info().Msgf("filesDir:%#+v", filesDir)
-
-	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Str("Host", r.Host).Str("RequestURI", r.RequestURI).Interface("URL", r.URL).Msg("REQUEST")
-
-		ctx := chi.RouteContext(r.Context())
-		pathPrefix := strings.TrimSuffix(ctx.RoutePattern(), "/*")
-		log.Info().Msgf("pathPrefix:%s", pathPrefix)
-
-		fs := http.StripPrefix(pathPrefix, http.FileServer(filesDir))
-		fs.ServeHTTP(w, r)
-	})
-
 	return server.New(r, nil), nil
 }
 

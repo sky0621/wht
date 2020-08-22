@@ -78,7 +78,7 @@ export default class WhtList extends Vue {
   readonly whts!: Wht[]
 
   readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
-  readonly isShort = false
+  readonly isShort = true
 
   focus = ''
   type = 'month'
