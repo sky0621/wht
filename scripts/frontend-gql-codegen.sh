@@ -5,4 +5,4 @@ SCRIPT_DIR=$(dirname "$0")
 echo ${SCRIPT_DIR}
 cd "${SCRIPT_DIR}" && cd ../view
 
-yarn run nuxt-ts
+yarn run graphql-codegen

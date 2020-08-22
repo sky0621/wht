@@ -293,7 +293,7 @@ type NoopPayload {
   clientMutationId: String
 }
 
-# Date ... format: "2006/01/02"
+# Date ... format: "2006-01-02"
 scalar Date
 
 scalar Upload

@@ -31,7 +31,15 @@
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
-        ></v-calendar>
+        >
+          <template v-slot:day="{ date }">
+            <template v-if="whtMap.get(date)">
+              <v-row class="fill-height">
+                <v-col>書いたよ</v-col>
+              </v-row>
+            </template>
+          </template>
+        </v-calendar>
         <v-menu
           v-model="selectedOpen"
           :close-on-content-click="false"
@@ -68,7 +76,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'nuxt-property-decorator'
+import { Vue, Component, Prop, Watch } from 'nuxt-property-decorator'
 import 'vue-apollo'
 import { Wht } from '~/types/gql-types'
 
@@ -76,6 +84,17 @@ import { Wht } from '~/types/gql-types'
 export default class WhtList extends Vue {
   @Prop({ default: () => {} })
   readonly whts!: Wht[]
+
+  whtMap: Map<String, String> = new Map<String, String>()
+
+  @Watch('whts')
+  updateWhtMap(val: Wht[]) {
+    if (!val) return
+    val.forEach((wht) => {
+      this.whtMap.set(wht.recordDate, wht.id)
+    })
+    console.log(this.whtMap)
+  }
 
   readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
   readonly isShort = true

@@ -12,7 +12,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const dateLayout = "2006/01/02"
+const dateLayout = "2006-01-02"
 
 // UnmarshalDate GraphQL -> Domain
 func UnmarshalDate(v interface{}) (time.Time, error) {
