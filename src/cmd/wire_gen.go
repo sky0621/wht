@@ -215,7 +215,7 @@ func setupServer(ctx context.Context, cfg config, resolver *web.Resolver) (*serv
 	}
 	log.Info().Msgf("workDir:%s", workDir)
 
-	filesDir := http.Dir(filepath.Join(workDir, "dist"))
+	filesDir := http.Dir(filepath.Join(workDir, "frontend"))
 	log.Info().Msgf("filesDir:%#+v", filesDir)
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {

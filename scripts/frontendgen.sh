@@ -20,11 +20,9 @@ if [ -z "${env_api_endpoint}" ]; then
   env_api_endpoint="${api_endpoint}"
 fi
 
-cd ./src/dist
-rm -fr ./*
-
-cd ../../view
+cd ./view
 rm -fr node_modules
+rm -fr frontendgen
 yarn install
 
 export WHT_API_ENDPOINT="${env_api_endpoint}"

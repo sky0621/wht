@@ -123,6 +123,6 @@ export default {
    */
   build: {},
   generate: {
-    dir: '../src/dist',
+    dir: './frontendgen',
   },
 }

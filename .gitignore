@@ -16,12 +16,11 @@
 
 .idea
 
-app-credential.json
+############app-credential.json
 
 view/.nuxt
 view/node_modules
-
-src/dist/*
+view/frontendgen
 
 .run/
 
