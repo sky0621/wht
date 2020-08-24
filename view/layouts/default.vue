@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar fixed app color="primary">
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title v-text="title" />
+      <v-toolbar-title style="color: #424242;" v-text="title" />
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" fixed app>
       <v-list>

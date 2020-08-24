@@ -24,22 +24,12 @@
           color="primary"
           :events="events"
           :event-color="getEventColor"
-          :type="type"
           :weekdays="weekdays"
-          :short-weekdays="isShort"
-          :short-months="isShort"
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
-        >
-          <template v-slot:day="{ date }">
-            <template v-if="whtMap.get(date)">
-              <v-row class="fill-height">
-                <v-col>書いたよ</v-col>
-              </v-row>
-            </template>
-          </template>
-        </v-calendar>
+          @change="updateRange"
+        ></v-calendar>
         <v-menu
           v-model="selectedOpen"
           :close-on-content-click="false"
@@ -75,79 +65,101 @@
   </v-row>
 </template>
 
-<script lang="ts">
-import { Vue, Component, Prop, Watch } from 'nuxt-property-decorator'
-import 'vue-apollo'
-import { Wht } from '~/types/gql-types'
-
-@Component({})
-export default class WhtList extends Vue {
-  @Prop({ default: () => {} })
-  readonly whts!: Wht[]
-
-  whtMap: Map<String, String> = new Map<String, String>()
-
-  @Watch('whts')
-  updateWhtMap(val: Wht[]) {
-    if (!val) return
-    val.forEach((wht) => {
-      this.whtMap.set(wht.recordDate, wht.id)
-    })
-    console.log(this.whtMap)
-  }
-
-  readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
-  readonly isShort = true
-
-  focus = ''
-  type = 'month'
-  selectedEvent = {}
-  selectedElement = null
-  selectedOpen = false
-  events = []
-
+<script>
+export default {
+  data: () => ({
+    focus: '',
+    type: 'month',
+    selectedEvent: {},
+    selectedElement: null,
+    selectedOpen: false,
+    events: [],
+    colors: [
+      'blue',
+      'indigo',
+      'deep-purple',
+      'cyan',
+      'green',
+      'orange',
+      'grey darken-1',
+    ],
+    names: [
+      'Meeting',
+      'Holiday',
+      'PTO',
+      'Travel',
+      'Event',
+      'Birthday',
+      'Conference',
+      'Party',
+    ],
+    weekdays: [1, 2, 3, 4, 5, 6, 0],
+  }),
   mounted() {
-    const cal: any = this.$refs.calendar
-    cal.checkChange()
-  }
+    this.$refs.calendar.checkChange()
+  },
+  methods: {
+    viewDay({ date }) {
+      this.focus = date
+      this.type = 'day'
+    },
+    getEventColor(event) {
+      return event.color
+    },
+    setToday() {
+      this.focus = ''
+    },
+    prev() {
+      this.$refs.calendar.prev()
+    },
+    next() {
+      this.$refs.calendar.next()
+    },
+    showEvent({ nativeEvent, event }) {
+      const open = () => {
+        this.selectedEvent = event
+        this.selectedElement = nativeEvent.target
+        setTimeout(() => (this.selectedOpen = true), 10)
+      }
 
-  viewDay(ctx: any) {
-    console.log(ctx.date)
-  }
+      if (this.selectedOpen) {
+        this.selectedOpen = false
+        setTimeout(open, 10)
+      } else {
+        open()
+      }
 
-  getEventColor(event: any) {
-    return event.color
-  }
+      nativeEvent.stopPropagation()
+    },
+    updateRange({ start, end }) {
+      const events = []
 
-  setToday() {
-    this.focus = ''
-  }
+      const min = new Date(`${start.date}T00:00:00`)
+      const max = new Date(`${end.date}T23:59:59`)
+      const days = (max.getTime() - min.getTime()) / 86400000
+      const eventCount = this.rnd(days, days + 20)
 
-  prev() {
-    const cal: any = this.$refs.calendar
-    cal.prev()
-  }
+      for (let i = 0; i < eventCount; i++) {
+        const allDay = this.rnd(0, 3) === 0
+        const firstTimestamp = this.rnd(min.getTime(), max.getTime())
+        const first = new Date(firstTimestamp - (firstTimestamp % 900000))
+        const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
+        const second = new Date(first.getTime() + secondTimestamp)
 
-  next() {
-    const cal: any = this.$refs.calendar
-    cal.next()
-  }
+        events.push({
+          name: this.names[this.rnd(0, this.names.length - 1)],
+          start: first,
+          end: second,
+          color: this.colors[this.rnd(0, this.colors.length - 1)],
+          timed: !allDay,
+        })
+      }
 
-  showEvent(ctx: any) {
-    const open = () => {
-      this.selectedEvent = ctx.event
-      this.selectedElement = ctx.nativeEvent.target
-      setTimeout(() => (this.selectedOpen = true), 10)
-    }
-
-    if (this.selectedOpen) {
-      this.selectedOpen = false
-      setTimeout(open, 10)
-    } else {
-      open()
-    }
-
-    ctx.nativeEvent.stopPropagation()
-  }
+      this.events = events
+    },
+    rnd(a, b) {
+      return Math.floor((b - a + 1) * Math.random()) + a
+    },
+  },
 }
 </script>
