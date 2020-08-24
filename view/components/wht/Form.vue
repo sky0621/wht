@@ -21,7 +21,6 @@
 
 <script lang="ts">
 import { Vue, Component, Emit } from 'nuxt-property-decorator'
-import 'vue-apollo'
 import { WhtInput } from '~/types/gql-types'
 
 class WhtInputImpl implements WhtInput {

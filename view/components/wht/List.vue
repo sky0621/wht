@@ -22,8 +22,8 @@
           ref="calendar"
           v-model="focus"
           color="primary"
+          event-color="accent"
           :events="events"
-          :event-color="getEventColor"
           :weekdays="weekdays"
           @click:event="showEvent"
           @click:more="viewDay"
@@ -65,101 +65,91 @@
   </v-row>
 </template>
 
-<script>
-export default {
-  data: () => ({
-    focus: '',
-    type: 'month',
-    selectedEvent: {},
-    selectedElement: null,
-    selectedOpen: false,
-    events: [],
-    colors: [
-      'blue',
-      'indigo',
-      'deep-purple',
-      'cyan',
-      'green',
-      'orange',
-      'grey darken-1',
-    ],
-    names: [
-      'Meeting',
-      'Holiday',
-      'PTO',
-      'Travel',
-      'Event',
-      'Birthday',
-      'Conference',
-      'Party',
-    ],
-    weekdays: [1, 2, 3, 4, 5, 6, 0],
-  }),
+<script lang="ts">
+import { Vue, Component, Prop, Watch } from 'nuxt-property-decorator'
+import { Wht } from '~/types/gql-types'
+
+@Component({})
+export default class WhtList extends Vue {
+  $refs!: {
+    calendar: any
+  }
+
+  @Prop({ default: () => {} })
+  readonly whts!: Wht[]
+
+  focus: string = ''
+  selectedEvent = {}
+  selectedElement = null
+  selectedOpen = false
+  events: Array<any> = []
+
+  readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
+
   mounted() {
-    this.$refs.calendar.checkChange()
-  },
-  methods: {
-    viewDay({ date }) {
-      this.focus = date
-      this.type = 'day'
-    },
-    getEventColor(event) {
-      return event.color
-    },
-    setToday() {
-      this.focus = ''
-    },
-    prev() {
-      this.$refs.calendar.prev()
-    },
-    next() {
-      this.$refs.calendar.next()
-    },
-    showEvent({ nativeEvent, event }) {
-      const open = () => {
-        this.selectedEvent = event
-        this.selectedElement = nativeEvent.target
-        setTimeout(() => (this.selectedOpen = true), 10)
-      }
+    const cal: any = this.$refs.calendar
+    console.log(cal)
+    cal.checkChange()
+  }
 
-      if (this.selectedOpen) {
-        this.selectedOpen = false
-        setTimeout(open, 10)
-      } else {
-        open()
-      }
+  viewDay(ctx: any) {
+    this.focus = ctx.date
+    // FIXME:
+    console.log('viewDay')
+    console.log(ctx)
+  }
 
-      nativeEvent.stopPropagation()
-    },
-    updateRange({ start, end }) {
-      const events = []
+  getEventColor(event: any) {
+    return event.color
+  }
 
-      const min = new Date(`${start.date}T00:00:00`)
-      const max = new Date(`${end.date}T23:59:59`)
-      const days = (max.getTime() - min.getTime()) / 86400000
-      const eventCount = this.rnd(days, days + 20)
+  setToday() {
+    this.focus = ''
+  }
 
-      for (let i = 0; i < eventCount; i++) {
-        const allDay = this.rnd(0, 3) === 0
-        const firstTimestamp = this.rnd(min.getTime(), max.getTime())
-        const first = new Date(firstTimestamp - (firstTimestamp % 900000))
-        const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
-        const second = new Date(first.getTime() + secondTimestamp)
+  prev() {
+    this.$refs.calendar.prev()
+  }
 
-        events.push({
-          name: this.names[this.rnd(0, this.names.length - 1)],
-          start: first,
-          end: second,
-          color: this.colors[this.rnd(0, this.colors.length - 1)],
-          timed: !allDay,
-        })
-      }
+  next() {
+    this.$refs.calendar.next()
+  }
 
-      this.events = events
-    },
-    rnd(a, b) {
-      return Math.floor((b - a + 1) * Math.random()) + a
-    },
-  },
+  showEvent(ctx: any) {
+    console.log('showEvent')
+    const open = () => {
+      this.selectedEvent = ctx.event
+      this.selectedElement = ctx.nativeEvent.target
+      setTimeout(() => (this.selectedOpen = true), 10)
+    }
+
+    if (this.selectedOpen) {
+      this.selectedOpen = false
+      setTimeout(open, 10)
+    } else {
+      open()
+    }
+
+    ctx.nativeEvent.stopPropagation()
+  }
+
+  @Watch('whts')
+  updateRange(ctx: any) {
+    console.log('updateRange')
+    console.log(ctx)
+    if (!this.whts) {
+      console.log('!this.whts')
+      return
+    }
+    console.log(this.whts)
+
+    this.whts.forEach((wht) => {
+      this.events.push({
+        name: 'done',
+        start: new Date(`${wht.recordDate}T00:00:00`),
+      })
+    })
+    console.log('normal end')
+  }
 }
 </script>
