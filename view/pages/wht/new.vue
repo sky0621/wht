@@ -1,5 +1,9 @@
 <template>
-  <WhtForm @submit="save" @cancel="moveToIndex" />
+  <WhtForm
+    :record-date="getRecordDate()"
+    @submit="save"
+    @cancel="moveToIndex"
+  />
 </template>
 
 <script lang="ts">
@@ -13,7 +17,15 @@ import '@nuxtjs/toast/index'
 @Component({
   components: { WhtForm },
 })
-export default class MovieNewPage extends Vue {
+export default class WhtNewPage extends Vue {
+  getRecordDate(): string {
+    const qDate = this.$route.query.date
+    if (typeof qDate === 'string') {
+      return qDate
+    }
+    return ''
+  }
+
   async save(input: WhtInput) {
     try {
       const res = await this.$apollo.mutate({

@@ -17,7 +17,7 @@
           </v-toolbar-title>
         </v-toolbar>
       </v-sheet>
-      <v-sheet height="600">
+      <v-sheet height="500">
         <v-calendar
           ref="calendar"
           v-model="focus"
@@ -35,7 +35,7 @@
           :activator="selectedElement"
           offset-x
         >
-          <v-card color="grey lighten-4" min-width="350px" flat>
+          <v-card color="grey lighten-4" min-width="200px" flat>
             <v-toolbar :color="selectedEvent.color" dark>
               <v-btn icon>
                 <v-icon>mdi-pencil</v-icon>

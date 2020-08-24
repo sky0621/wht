@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Emit } from 'nuxt-property-decorator'
+import { Vue, Component, Emit, Prop } from 'nuxt-property-decorator'
 import { WhtInput } from '~/types/gql-types'
 
 class WhtInputImpl implements WhtInput {
@@ -28,12 +28,19 @@ class WhtInputImpl implements WhtInput {
   recordDate: any
   /** 画像 */
   image: any
+
+  constructor(recordDate: any) {
+    this.recordDate = recordDate
+  }
 }
 
 @Component({})
 export default class WhtForm extends Vue {
+  @Prop({ default: () => {} })
+  readonly recordDate!: string
+
   // 入力フォームの初期化
-  input: WhtInput = new WhtInputImpl()
+  input: WhtInput = new WhtInputImpl(this.recordDate)
 
   save() {
     // TODO: バリデーション実装
