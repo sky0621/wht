@@ -25,9 +25,8 @@
           event-color="accent"
           :events="events"
           :weekdays="weekdays"
+          @click:date="editWht"
           @click:event="showEvent"
-          @click:more="viewDay"
-          @click:date="viewDay"
           @change="updateRange"
         ></v-calendar>
         <v-menu
@@ -87,16 +86,15 @@ export default class WhtList extends Vue {
   readonly weekdays = [1, 2, 3, 4, 5, 6, 0]
 
   mounted() {
-    const cal: any = this.$refs.calendar
-    console.log(cal)
-    cal.checkChange()
+    this.$refs.calendar.checkChange()
   }
 
-  viewDay(ctx: any) {
+  async editWht(ctx: any) {
     this.focus = ctx.date
-    // FIXME:
-    console.log('viewDay')
-    console.log(ctx)
+    await this.$router.push({
+      path: '/wht/new?date=',
+      query: { date: ctx.date },
+    })
   }
 
   getEventColor(event: any) {
@@ -134,22 +132,16 @@ export default class WhtList extends Vue {
   }
 
   @Watch('whts')
-  updateRange(ctx: any) {
-    console.log('updateRange')
-    console.log(ctx)
+  updateRange() {
     if (!this.whts) {
-      console.log('!this.whts')
       return
     }
-    console.log(this.whts)
-
     this.whts.forEach((wht) => {
       this.events.push({
         name: 'done',
         start: new Date(`${wht.recordDate}T00:00:00`),
       })
     })
-    console.log('normal end')
   }
 }
 </script>
