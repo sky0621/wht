@@ -30,8 +30,7 @@ require (
 	github.com/volatiletech/strmangle v0.0.1
 	go.opencensus.io v0.22.3
 	gocloud.dev v0.20.0
-	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
